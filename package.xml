@@ -1,13 +1,14 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>ger_drone</name>
-  <version>0.0.0</version>
-  <description>The ger_drone package</description>
+  <version>0.0.1</version>
+  <description>Drone package created by Robotics Study Group of University of Campinas</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->
   <!-- <maintainer email="jane.doe@example.com">Jane Doe</maintainer> -->
-  <maintainer email="elton@todo.todo">elton</maintainer>
+  <manteiner email="robotica.unicamp@gmail.com">Grupo de Estudos em Robótica da Unicamp (GER)</manteiner>
+  <maintainer email="elton.nascimento@students.ic.unicamp.br">EltonCN</maintainer>
 
 
   <!-- One license tag required, multiple allowed, one license per tag -->
@@ -15,18 +16,14 @@
   <!--   BSD, MIT, Boost Software License, GPLv2, GPLv3, LGPLv2.1, LGPLv3 -->
   <license>TODO</license>
 
-
-  <!-- Url tags are optional, but multiple are allowed, one per tag -->
-  <!-- Optional attribute type can be: website, bugtracker, or repository -->
-  <!-- Example: -->
-  <!-- <url type="website">http://wiki.ros.org/ger_drone</url> -->
-
+  <url type="website">http://www.gerunicamp.com.br/</url>
+  <url type="repository">httpshttps://github.com/ger-unicamp/ger_drone</url>
 
   <!-- Author tags are optional, multiple are allowed, one per tag -->
   <!-- Authors do not have to be maintainers, but could be -->
   <!-- Example: -->
   <!-- <author email="jane.doe@example.com">Jane Doe</author> -->
-
+  <author email="elton.nascimento@students.ic.unicamp.br">EltonCN</author>
 
   <!-- The *depend tags are used to specify dependencies -->
   <!-- Dependencies can be catkin packages or system dependencies -->
