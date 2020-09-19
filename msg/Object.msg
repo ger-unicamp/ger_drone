@@ -1,6 +1,6 @@
 #Mensagem para transmissão de um objeto detectado em um frame específico
 
-std_msgs/Header
+std_msgs/Header header
 
 #Identificador do Objeto
 Identifier identifier
