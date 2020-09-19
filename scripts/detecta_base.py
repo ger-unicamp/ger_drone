@@ -55,6 +55,8 @@ def recebeInfo(msg):
 def publicaBase(R, t):
     msg = Object()
 
+    msg.identifier.id = 1
+
     msg.pose.position.x = t[0]
     msg.pose.position.y = t[1]
     msg.pose.position.z = t[2]
