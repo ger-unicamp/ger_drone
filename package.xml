@@ -62,6 +62,9 @@
   <build_depend>cv_bridge</build_depend>
   <exec_depend>cv_bridge</exec_depend>
 
+  <build_depend>mrs_msgs</build_depend>
+  <build_export_depend>mrs_msgs</build_export_depend>
+  <exec_depend>mrs_msgs</exec_depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
