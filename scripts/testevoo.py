@@ -16,12 +16,14 @@ if __name__ == '__main__':
         req = ReferenceStampedSrv._request_class()
         srv = rospy.ServiceProxy('/uav1/control_manager/reference', ReferenceStampedSrv)
         
-        req.reference.position.x = 5.0
-        req.reference.position.y = 5.0
+        req.reference.position.x = 8.1
+        req.reference.position.y = 1.5
         req.reference.position.z = 2.0
         
      
         srv(req)
+
+        rospy.sleep(10)
 
 
     except rospy.ROSInternalException:
