@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import rospy
-from mrs_msgs.srv import ReferenceSrv
+from mrs_msgs.srv import ReferenceStampedSrv
 from geometry_msgs.msg import Point
 
 
@@ -13,8 +13,8 @@ if __name__ == '__main__':
 
        
 
-        req = ReferenceSrv._request_class()
-        srv = rospy.ServiceProxy('/uav1/control_manager/reference',ReferenceSrv)
+        req = ReferenceStampedSrv._request_class()
+        srv = rospy.ServiceProxy('/uav1/control_manager/reference', ReferenceStampedSrv)
         
         req.reference.position.x = 5.0
         req.reference.position.y = 5.0
