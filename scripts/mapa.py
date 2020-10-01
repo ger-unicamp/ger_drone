@@ -12,6 +12,11 @@ objetoY = []
 
 def recebeObjeto(msg):
 
+    if(msg.pose.position.x > 8 or msg.pose.position.x < -8):
+        return
+    if(msg.pose.position.y > 8 or msg.pose.position.y < -8):
+        return
+
     objetoX.append(msg.pose.position.x)
     objetoY.append(msg.pose.position.y)
 
@@ -21,14 +26,18 @@ if __name__ == '__main__':
     try:
         rospy.init_node('mapa', anonymous="True")
 
-        rospy.Subscriber('objeto_detectado', Object, recebeObjeto)
+        rospy.Subscriber('/uav1/bluefox_optflow/objeto_detectado', Object, recebeObjeto)
 
         rate = rospy.Rate(10) #Define a frequencia de execucao em Hz
 
+        plt.ion()
+        plt.show()
+
         while not rospy.is_shutdown():
         
-            plt.plot(objetoX, objetoY)
-            plt.show()
+            plt.scatter(objetoX, objetoY)
+            plt.draw()
+            plt.pause(0.00000000001)
 
             rate.sleep() #Espera o tempo para executar o programa na frequencia definida
 
