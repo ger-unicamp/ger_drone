@@ -31,6 +31,25 @@ def recebeImagem(msg):
     orb = cv.ORB_create()
 
     kp1, des1 = orb.detectAndCompute(base, None)
+
+    hsv = cv.cvtColor(img, cv.COLOR_BGR2HSV)
+
+    kerno = np.ones((5,5),"uint8")
+
+    #Filtragem da cor amarela
+    min_amarelo = np.array([20,245,245], np.uint8)
+    max_amarelo = np.array([40,255,255], np.uint8)
+    masc_amarelo = cv.inRange(hsv,min_amarelo,max_amarelo)
+    masc_amarelo = cv.dilate(masc_amarelo,kerno)
+    res_amarelo = cv.bitwise_and(img,img,mask=masc_amarelo)
+
+    #Filtragem da cor azul
+    min_azul = np.array([99,157,186], np.uint8)
+    max_azul = np.array([119,177,206], np.uint8)
+    masc_azul = cv.inRange(hsv,min_azul,max_azul)
+    masc_azul = cv.dilate(masc_azul,kerno)
+    res_azul = cv.bitwise_and(img,img,mask=masc_azul)
+
     kp2, des2 = orb.detectAndCompute(img, None)
 
     FLANN_INDEX_LSH = 6
