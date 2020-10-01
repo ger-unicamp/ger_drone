@@ -68,6 +68,10 @@ def recebeImagem(msg):
         if m.distance < 0.7*n.distance:
             good.append(m)
 
+    if(good<4):
+        return
+
+
     #Calcula os pontos da base na imagem
     pontoImagem = []
 
