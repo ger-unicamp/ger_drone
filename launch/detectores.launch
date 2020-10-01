@@ -1,0 +1,3 @@
+<launch>
+    <node name="detecta_base" pkg="ger_drone"  type="detecta_base.py" ns="/uav1/bluefox_optflow" output="screen"/>
+</launch>

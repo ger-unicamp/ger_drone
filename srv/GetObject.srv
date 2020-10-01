@@ -1,0 +1,5 @@
+#Requisita objetos conhecidos
+
+ger_drone/Identifier identifier #Forma do objeto sendo procurado (o indice sera ignorado)
+---
+ger_drone/Object[] list #Lista com objetos existentes
