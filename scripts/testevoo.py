@@ -11,15 +11,15 @@ if __name__ == '__main__':
 
         rospy.wait_for_service('/uav1/control_manager/reference')
 
-        x = 5.0
-        y = 5.0
-        z = 2.0
-
+       
 
         req = ReferenceSrv._request_class()
         srv = rospy.ServiceProxy('/uav1/control_manager/reference',ReferenceSrv)
         
-        req.reference.position = Point(x,y,z)
+        req.reference.position.x = 5.0
+        req.reference.position.y = 5.0
+        req.reference.position.z = 2.0
+        
      
         srv(req)
 
