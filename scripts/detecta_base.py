@@ -13,12 +13,13 @@ from ger_drone.msg import Identifier
 from cv_bridge import CvBridge, CvBridgeError
 import cv2 as cv
 import numpy as np
+from matplotlib import pyplot as plt
 
 #Constante
-escala = 127.5
+escala = 0.007843137
 centro_base = (140,135)
 
-K = [[0,0,0]*3]
+K = [[0,0,0],[0,0,0],[0,0,0]]
 
 base = 0
 
@@ -68,9 +69,8 @@ def recebeImagem(msg):
         if m.distance < 0.7*n.distance:
             good.append(m)
 
-    if(good<4):
+    if(len(good)<8):
         return
-
 
     #Calcula os pontos da base na imagem
     pontoImagem = []
@@ -97,15 +97,23 @@ def recebeImagem(msg):
 
     pontoImagem = np.array(pontoImagem, dtype=np.float32)
     pontoReal = np.array(pontoReal,dtype=np.float32)
-    K = np.array(K,dtype=np.float32)
 
-    a, RObj, tObj = cv.solvePnP(pontoReal,pontoImagem , K, np.zeros((5,1)))
+    a, RObj, tObj, _ = cv.solvePnPRansac(pontoReal,pontoImagem , K, np.zeros((5,1)))
+
+    if not a:
+        return
 
     RObj, _ = cv.Rodrigues(RObj)
 
     RCamera, tCamera = inverteTransformacao(RObj, tObj)
 
     publicaBase(RCamera, tCamera)
+
+    rospy.loginfo("Found "+str(len(good))+" matches")
+
+    #img3 = cv.drawMatches(base, kp1, img, kp2, good, None, flags=cv.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
+    #plt.imshow(img3)
+    #plt.show()
 
 
 
@@ -119,6 +127,8 @@ def inverteTransformacao(R, t):
 
 def recebeInfo(msg):  
 
+    global K
+
     index = 0
 
     for i in range(3):
@@ -126,15 +136,20 @@ def recebeInfo(msg):
             K[i][j] = msg.K[index]
             index += 1
 
+    K = np.array(K,dtype=np.float32)
 
 def publicaBase(R, t):
     msg = Object()
 
-    msg.identifier.type = msg.identifier.TYPE_BASE
+    msg.identifier.type.data = msg.identifier.TYPE_BASE
+
+    msg.identifier.state.data = msg.identifier.STATE_DESCONHECIDO
 
     msg.pose.position.x = t[0]
     msg.pose.position.y = t[1]
     msg.pose.position.z = t[2]
+    
+    msg.identifier.index.data = -1
 
     #Como colocar a orientacao?
 
@@ -147,8 +162,8 @@ if __name__ == '__main__':
     try:
         rospy.init_node('detecta_base', anonymous="True")
 
-        rospy.Subscriber('camera_baixo/image_rect_color', Image, recebeImagem)
-        rospy.Subscriber('camera_baixo/camera_info', CameraInfo, recebeInfo)
+        rospy.Subscriber('image_rect_color', Image, recebeImagem)
+        rospy.Subscriber('camera_info', CameraInfo, recebeInfo)
 
 
         pubBase = rospy.Publisher('objeto_detectado',Object, queue_size=10)
