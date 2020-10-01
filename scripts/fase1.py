@@ -43,7 +43,7 @@ if __name__ == '__main__':
             req.reference.position.z = 10
             req.reference.heading = 0
 
-            proxy = rospy.ServiceProxy('control_manager/reference',ReferenceSrv)
+            proxy = rospy.ServiceProxy('/uav1/control_manager/reference',ReferenceSrv)
             resp = proxy(req)
 
 
