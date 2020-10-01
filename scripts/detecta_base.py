@@ -20,6 +20,39 @@ def converteImagem(img):
 
 def recebeImagem(msg):
     img = converteImagem(msg)
+    import numpy as np
+    import cv2 as cv
+    import matplotlib.pyplot as plt
+
+    foto = cv.imread('imagem_arena.jpg',cv.IMREAD_GRAYSCALE)
+    base = cv.imread('imagem_base.png',cv.IMREAD_GRAYSCALE)
+
+    orb = cv.ORB_create()
+
+    kp1, des1 = orb.detectAndCompute(foto, None)
+    kp2, des2 = orb.detectAndCompute(base, None)
+
+    FLANN_INDEX_LSH = 6
+    index_params = dict(algorithm = FLANN_INDEX_LSH, table_number = 6, key_size = 12, multi_probe_level = 1)
+    search_params = dict(checks = 100)
+
+    flann = cv.FlannBasedMatcher(index_params, search_params)
+
+    matches = flann.knnMatch(des1,des2,k=2)
+
+    good = []
+    for i,m_n in enumerate(matches):
+        if len(m_n) != 2:
+            continue
+        (m,n) = m_n
+        if m.distance < 0.7*n.distance:
+            good.append(m)
+
+    draw_params = dict(matchColor = (0,255,0),singlePointColor = (255,0,0),matchesMask = None, flags = cv.DrawMatchesFlags_DEFAULT)
+
+    resultado = cv.drawMatches(foto,kp1,base,kp2,good,None,**draw_params)
+
+    plt.imshow(resultado,),plt.show()
 
     #Calcula os pontos da base na imagem
     pontoImagem = []
