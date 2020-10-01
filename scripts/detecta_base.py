@@ -62,7 +62,7 @@ def recebeImagem(msg):
         point_photo = kp2[match.trainIdx].pt
 
         #Desloca o ponto para o centro de coordenadas do centro da base
-        point_baseMetro = [point_base[0]-centro_base[0],point_base[1]-centro_base[1]]
+        point_baseMetro = [point_base[0]-centro_base[0],point_base[1]-centro_base[1], 0]
 
         #Converte para metro
         point_baseMetro[0] = point_baseMetro[0] * escala 
@@ -72,8 +72,13 @@ def recebeImagem(msg):
         pontoImagem.append([point_photo[0],point_photo[1]])
         pontoReal.append(point_baseMetro)
 
+    pontoImagem = np.array(pontoImagem, dtype=np.float32)
+    pontoReal = np.array(pontoReal,dtype=np.float32)
+    K = np.array(K,dtype=np.float32)
 
-    RObj, tObj = cv.solvePnP(pontoImagem, pontoReal, K, None)
+    a, RObj, tObj = cv.solvePnP(pontoReal,pontoImagem , K, np.zeros((5,1)))
+
+    RObj, _ = cv.Rodrigues(RObj)
 
     RCamera, tCamera = inverteTransformacao(RObj, tObj)
 
