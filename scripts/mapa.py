@@ -70,11 +70,12 @@ if __name__ == '__main__':
 
         while not rospy.is_shutdown():
         
+            plt.title("Bases detectadas")
             plt.ylim(0,8)
             plt.xlim(0,8)
             plt.scatter(objetoX, objetoY)
             plt.draw()
-            plt.pause(0.0000001)
+            plt.pause(1)
 
             rate.sleep() #Espera o tempo para executar o programa na frequencia definida
 

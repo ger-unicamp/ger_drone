@@ -30,7 +30,7 @@ def converteImagem(img):
 def recebeImagem(msg):
     img = converteImagem(msg)
 
-    orb = cv.ORB_create()
+    orb = cv.ORB_create(nfeatures=1000)
 
     kp1, des1 = orb.detectAndCompute(base, None)
 
@@ -46,13 +46,14 @@ def recebeImagem(msg):
     res_amarelo = cv.bitwise_and(img,img,mask=masc_amarelo)
 
     #Filtragem da cor azul
-    min_azul = np.array([99,157,186], np.uint8)
-    max_azul = np.array([119,177,206], np.uint8)
+    min_azul = np.array([99,50,50], np.uint8)
+    max_azul = np.array([119,255,255], np.uint8)
     masc_azul = cv.inRange(hsv,min_azul,max_azul)
+    masc_azul = cv.dilate(masc_azul,kerno)
     masc_azul = cv.dilate(masc_azul,kerno)
     res_azul = cv.bitwise_and(img,img,mask=masc_azul)
 
-    kp2, des2 = orb.detectAndCompute(img, None)
+    kp2, des2 = orb.detectAndCompute(res_azul, None)
 
     FLANN_INDEX_LSH = 6
     index_params = dict(algorithm = FLANN_INDEX_LSH, table_number = 6, key_size = 12, multi_probe_level = 1)
@@ -67,10 +68,10 @@ def recebeImagem(msg):
         if len(m_n) != 2:
             continue
         (m,n) = m_n
-        if m.distance < 0.8*n.distance:
+        if m.distance < 0.7*n.distance:
             good.append(m)
 
-    if(len(good)<10):
+    if(len(good)<5):
         return
 
     #Calcula os pontos da base na imagem
@@ -187,9 +188,13 @@ if __name__ == '__main__':
 
         base = cv.imread(path,cv.IMREAD_GRAYSCALE)
 
+        #plt.show()
+
         while not rospy.is_shutdown():
 
             #Codigo aqui!
+            #plt.draw()
+            #plt.pause(1)
 
             rate.sleep() #Espera o tempo para executar o programa na frequencia definida
 

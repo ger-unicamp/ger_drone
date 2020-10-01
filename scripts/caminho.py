@@ -72,7 +72,7 @@ if __name__ == '__main__':
         for i in pontos:
             rospy.sleep(2)
             voar(i)
-            rospy.sleep(6)
+            rospy.sleep(15)
 
 
 
