@@ -14,6 +14,7 @@ from cv_bridge import CvBridge, CvBridgeError
 import cv2 as cv
 import numpy as np
 from matplotlib import pyplot as plt
+from scipy.spatial.transform import Rotation
 
 #Constante
 escala = 0.007843137
@@ -66,10 +67,10 @@ def recebeImagem(msg):
         if len(m_n) != 2:
             continue
         (m,n) = m_n
-        if m.distance < 0.7*n.distance:
+        if m.distance < 0.8*n.distance:
             good.append(m)
 
-    if(len(good)<8):
+    if(len(good)<10):
         return
 
     #Calcula os pontos da base na imagem
@@ -151,7 +152,14 @@ def publicaBase(R, t):
     
     msg.identifier.index.data = -1
 
-    #Como colocar a orientacao?
+    r = Rotation.from_dcm(R)
+
+    quat = r.as_quat()
+
+    msg.pose.orientation.x = quat[0]
+    msg.pose.orientation.y = quat[1]
+    msg.pose.orientation.z = quat[2]
+    msg.pose.orientation.w = quat[3]
 
     pubBase.publish(msg)
 
