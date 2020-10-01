@@ -26,6 +26,7 @@ def recebeImagem(msg):
 
     pontoReal = []
 
+
     RObj, tObj = cv.solvePnP(pontoImagem, pontoReal, K, None)
 
     RCamera, tCamera = inverteTransformacao(RObj, tObj)
@@ -55,7 +56,7 @@ def recebeInfo(msg):
 def publicaBase(R, t):
     msg = Object()
 
-    msg.identifier.id = 1
+    msg.identifier.type = msg.identifier.TYPE_BASE
 
     msg.pose.position.x = t[0]
     msg.pose.position.y = t[1]
@@ -76,7 +77,7 @@ if __name__ == '__main__':
         rospy.Subscriber('camera_baixo/camera_info', CameraInfo, recebeInfo)
 
 
-        pubBase = rospy.Publisher('base',Object, queue_size=10)
+        pubBase = rospy.Publisher('objeto_detectado',Object, queue_size=10)
 
         rate = rospy.Rate(10) #Define a frequencia de execucao em Hz
 
