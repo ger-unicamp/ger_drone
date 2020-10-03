@@ -14,6 +14,8 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   message_generation
   cv_bridge
+  mrs_msgs
+  OpenCV
 )
 
 ## System dependencies are found with CMake's conventions
@@ -122,6 +124,7 @@ catkin_package(
 include_directories(
 # include
   ${catkin_INCLUDE_DIRS}
+  ${OpenCV_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
