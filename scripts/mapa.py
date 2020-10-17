@@ -111,6 +111,8 @@ def entregaListaObjetos(req):
     #lista onde os identificadores sejam iguais exeto o indice.
     ## @todo Programar o serviço GetObjet. 
     # Ele deve colocar na resposta uma lista de objetos cujo identificador tenha o mesmo estado e tipo do pedido
+    # Tópico 3: http://wiki.ros.org/rospy/Overview/Services
+    # Tópico 1: http://wiki.ros.org/ROS/Tutorials/WritingServiceClient%28python%29
 
     #if(req.identifier == ):
         
@@ -119,7 +121,7 @@ def entregaListaObjetos(req):
 
 
 
-    return 
+    return GetObjectResponse(lista)
 
     ## FIM Programar o serviço GetObjet FIM -------------------------------------------------------------
 
