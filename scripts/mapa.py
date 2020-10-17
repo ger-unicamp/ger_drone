@@ -1,36 +1,45 @@
+# TO DO
+# identificador de bases?
+# objetos diferentes?
+# como funciona subscriber + service?
+
 #!/usr/bin/env python
 
 import rospy
 
-from scipy.spatial.transform import Rotation as R
 import numpy as np
+from scipy.spatial.transform import Rotation as R
 from matplotlib import pyplot as plt
 
-from ger_drone.msg import Object
-from ger_drone.msg import Identifier
-
 from mrs_msgs.msg import UavState
+from ger_drone.msg import Object, Identifier, ObjectState
+
+from ger_drone.srv import GetObject, Identifier, GetObjectResponse
 
 
 
-objetoX = []
-objetoY = []
 
+# Lista de bases inicialmente vazia
+objetos = []
+
+# Vetor de posições para cálculo de coordenadas
 position = np.asarray([0,0,0])
-
 rotation = np.asarray([[1,0,0],[0,1,0],[0,0,1]])
 
+indiceMaximo = -1
+
+# Cria e insere objeto da mensagem na lista
 def recebeObjeto(msg):
 
-    
+    print('Objeto recebido.')
 
-    #Posicao do obj nas coordenadas da camera
+    # Posicao do obj nas coordenadas da camera
     cameraT = np.asarray([msg.pose.position.x, msg.pose.position.y, msg.pose.position.z])
     cameraR = R.from_quat([msg.pose.orientation.x, msg.pose.orientation.y,msg.pose.orientation.z,msg.pose.orientation.w]).as_dcm()
 
-    #@todo concatenar pose da camera no frame do drone
+    # @todo concatenar pose da camera no frame do drone
 
-    #Concatena com a pose do drone para obter a pose no mundo
+    # Concatena com a pose do drone para obter a pose no mundo
     worldR = np.matmul(rotation, cameraR)
     worldT = position+np.matmul(rotation, cameraT)
 
@@ -39,15 +48,51 @@ def recebeObjeto(msg):
     if(worldT[1] > 8 or worldT[1] < 0):
         return
 
-    objetoX.append(worldT[0])
-    objetoY.append(worldT[1])
-
     r = R.from_dcm(worldR)
-    theta = r.as_euler('xyz')[2]
+    quat = r.as_quat()
 
+    if(msg.identifier.state.data == Identifier.STATE_DESCONHECIDO):
+        estado = Identifier.STATE_NOPROCESSADO
+    else:
+        estado = msg.identifier.state.data
 
-def recebePose(msg):
+    novoObjeto = Object()
+    
+    #tipo do objeto
+    novoObjeto.identifier.type.data = msg.identifier.type.data
+    
+    #estado do objeto
+    novoObjeto.identifier.state.data = estado
+    
+    #index do objeto
+    if(msg.identifier.index.data == -1):
+        # @todo Verificar se um objeto com índice -1 é o mesmo que outro objeto que já está na lista
+        # Possivelmente ajustar a posição do objeto que já está na lista (média?) 
+        #
+        # #FIM Verificar se objeto já está na lista FIM ---------------------------------------
+        indiceMaximo += 1
+        novoObjeto.identifier.index.data = indiceMaximo
+    else:
+        # @todo - Se objeto retornar com índice != -1, verificar se o tipo bate com o objeto já na lista, e atualizar o estado
+        novoObjeto.identifier.index.data = msg.identifier.index.data
+    
+    #pose do objeto
+    novoObjeto.pose.point.x = worldT[0]
+    novoObjeto.pose.point.y = worldT[1]
+    novoObjeto.pose.point.z = worldT[2]
+    
+    #quat do objeto
+    novoObjeto.pose.orientation.x = quat[0]
+    novoObjeto.pose.orientation.y = quat[1]
+    novoObjeto.pose.orientation.z = quat[2]
+    novoObjeto.pose.orientation.w = quat[3]
+
+    objetos.append(novoObjeto)
+
+def recebeOdometria(msg):
     global position, rotation
+
+    print('Odometria recebida.')
 
     position[0] = msg.pose.position.x
     position[1] = msg.pose.position.y
@@ -57,30 +102,53 @@ def recebePose(msg):
     rotation = r.as_dcm()
 
 
+# Handler da função retorna serviço GetObject
+# precisa testar qual objeto foi pedido?
+def entregaListaObjetos(req):
+
+    lista = [] #Lista com objetos que atendem o pedido
+
+    #lista onde os identificadores sejam iguais exeto o indice.
+    ## @todo Programar o serviço GetObjet. 
+    # Ele deve colocar na resposta uma lista de objetos cujo identificador tenha o mesmo estado e tipo do pedido
+
+    #if(req.identifier == ):
+        
+
+    print('Entregando objeto.')
+
+
+
+    return 
+
+    ## FIM Programar o serviço GetObjet FIM -------------------------------------------------------------
+
 if __name__ == '__main__':
     try:
+
+        # Inicia nó com nome 'mapa'
         rospy.init_node('mapa', anonymous="True")
 
-        rospy.Subscriber('/uav1/bluefox_optflow/objeto_detectado', Object, recebeObjeto)
-        rospy.Subscriber('/uav1/odometry/uav_state', UavState, recebePose)
+        # Subscriber para receber objeto por mensagem
+        # coordenadas precisam ser transformadas para globais?
+        rospy.Subscriber('objeto_detectado', Object, recebeObjeto)
 
-        rate = rospy.Rate(10) #Define a frequencia de execucao em Hz
+        # Subscriber para receber odometria
+        rospy.Subscriber('/uav1/odometry/uav_state', UavState, recebeOdometria)
 
-        plt.show()
+        # Serviço GetObject para entregar objetos
+        rospy.Service('get_object', GetObject, entregaListaObjetos)
 
+        # Define a frequência de execução em Hz
+        rate = rospy.Rate(10)
+
+        #rospy.spin()
+
+        # Checa por mensagem ou serviço
         while not rospy.is_shutdown():
-        
-            plt.title("Bases detectadas")
-            plt.ylim(0,8)
-            plt.xlim(0,8)
-            plt.scatter(objetoX, objetoY)
-            plt.draw()
-            plt.pause(1)
 
-            rate.sleep() #Espera o tempo para executar o programa na frequencia definida
-
-        plt.close('all')
+            # Espera o tempo para executar o programa na frequência definida
+            rate.sleep()
 
     except rospy.ROSInternalException:
-        plt.close('all')
         pass
