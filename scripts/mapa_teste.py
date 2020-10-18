@@ -55,6 +55,10 @@ def entregaListaObjetos(req):
 
     lista.append(obj)
 
+    for obj in lista:
+        obj.identifier.state.data = Identifier.STATE_NOPROCESSADO
+        obj.identifier.type.data = Identifier.TYPE_BASE
+
     return GetObjectResponse(lista)
 
 
