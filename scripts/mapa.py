@@ -1,8 +1,3 @@
-# TO DO
-# identificador de bases?
-# objetos diferentes?
-# como funciona subscriber + service?
-
 #!/usr/bin/env python
 
 import rospy
@@ -17,8 +12,6 @@ from ger_drone.msg import Object, Identifier, ObjectState
 from ger_drone.srv import GetObject, Identifier, GetObjectResponse
 
 
-
-
 # Lista de bases inicialmente vazia
 objetos = []
 
@@ -31,13 +24,9 @@ indiceMaximo = -1
 # Cria e insere objeto da mensagem na lista
 def recebeObjeto(msg):
 
-    print('Objeto recebido.')
-
     # Posicao do obj nas coordenadas da camera
     cameraT = np.asarray([msg.pose.position.x, msg.pose.position.y, msg.pose.position.z])
     cameraR = R.from_quat([msg.pose.orientation.x, msg.pose.orientation.y,msg.pose.orientation.z,msg.pose.orientation.w]).as_dcm()
-
-    # @todo concatenar pose da camera no frame do drone
 
     # Concatena com a pose do drone para obter a pose no mundo
     worldR = np.matmul(rotation, cameraR)
@@ -47,6 +36,23 @@ def recebeObjeto(msg):
         return
     if(worldT[1] > 8 or worldT[1] < 0):
         return
+
+    # Verifica se um objeto com índice -1 é o mesmo que outro objeto que já está na lista
+    if(msg.identifier.index.data == -1):
+        # comparar a pose se está próxima (intervalo)
+        # distancia euclidiana numpy.linalg.norm
+        for i in objetos:
+            if (i.identifier.type.data == msg.identifier.type.data):
+                if (abs(i.pose.point.x - worldT[0]) < num and
+                    abs(i.pose.point.y - worldT[1]) < num and
+                    abs(i.pose.point.z - worldT[2]) < num)
+                    return
+
+    # Se objeto retornar com índice != -1, verificar se o tipo bate com o objeto já na lista, e atualizar o estado
+    if(msg.identifier.index.data != -1):
+        for i in objetos:
+            if(i.identifier.index.data == msg.identifier.index.data):
+                novoObjeto.identifier.state.data = msg.identifier.state.data
 
     r = R.from_dcm(worldR)
     quat = r.as_quat()
@@ -58,23 +64,13 @@ def recebeObjeto(msg):
 
     novoObjeto = Object()
     
+    rospy.loginfo('Objeto armazenado.')
+    
     #tipo do objeto
     novoObjeto.identifier.type.data = msg.identifier.type.data
     
     #estado do objeto
     novoObjeto.identifier.state.data = estado
-    
-    #index do objeto
-    if(msg.identifier.index.data == -1):
-        # @todo Verificar se um objeto com índice -1 é o mesmo que outro objeto que já está na lista
-        # Possivelmente ajustar a posição do objeto que já está na lista (média?) 
-        #
-        # #FIM Verificar se objeto já está na lista FIM ---------------------------------------
-        indiceMaximo += 1
-        novoObjeto.identifier.index.data = indiceMaximo
-    else:
-        # @todo - Se objeto retornar com índice != -1, verificar se o tipo bate com o objeto já na lista, e atualizar o estado
-        novoObjeto.identifier.index.data = msg.identifier.index.data
     
     #pose do objeto
     novoObjeto.pose.point.x = worldT[0]
@@ -92,8 +88,6 @@ def recebeObjeto(msg):
 def recebeOdometria(msg):
     global position, rotation
 
-    print('Odometria recebida.')
-
     position[0] = msg.pose.position.x
     position[1] = msg.pose.position.y
     position[2] = msg.pose.position.z
@@ -103,27 +97,19 @@ def recebeOdometria(msg):
 
 
 # Handler da função retorna serviço GetObject
-# precisa testar qual objeto foi pedido?
 def entregaListaObjetos(req):
 
     lista = [] #Lista com objetos que atendem o pedido
 
-    #lista onde os identificadores sejam iguais exeto o indice.
-    ## @todo Programar o serviço GetObjet. 
-    # Ele deve colocar na resposta uma lista de objetos cujo identificador tenha o mesmo estado e tipo do pedido
+    # Monta lista com objetos com mesmo estado e tipo requisitados
+    for i in objetos
+        if (req.identifier.state.data == i.identifier.state.data and req.identifier.type.data == i.identifier.type.data):
+            lista.append(i)
+
     # Tópico 3: http://wiki.ros.org/rospy/Overview/Services
     # Tópico 1: http://wiki.ros.org/ROS/Tutorials/WritingServiceClient%28python%29
 
-    #if(req.identifier == ):
-        
-
-    print('Entregando objeto.')
-
-
-
     return GetObjectResponse(lista)
-
-    ## FIM Programar o serviço GetObjet FIM -------------------------------------------------------------
 
 if __name__ == '__main__':
     try:
@@ -132,7 +118,6 @@ if __name__ == '__main__':
         rospy.init_node('mapa', anonymous="True")
 
         # Subscriber para receber objeto por mensagem
-        # coordenadas precisam ser transformadas para globais?
         rospy.Subscriber('objeto_detectado', Object, recebeObjeto)
 
         # Subscriber para receber odometria
@@ -143,8 +128,6 @@ if __name__ == '__main__':
 
         # Define a frequência de execução em Hz
         rate = rospy.Rate(10)
-
-        #rospy.spin()
 
         # Checa por mensagem ou serviço
         while not rospy.is_shutdown():
