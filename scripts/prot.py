@@ -7,9 +7,8 @@ from std_srvs.srv import Trigger
 from mrs_msgs.srv import Vec4
 from mrs_msgs.srv import ReferenceStampedSrv
 from geometry_msgs.msg import Point
-from mrs_msgs.srv import String 
+from mrs_msgs.srv import String
 from mrs_msgs.msg import PositionCommand
-from geometry_msgs.msg import Point
 
 '''
 from ger_drone.msg import Identifier
@@ -27,7 +26,7 @@ def pousar():
    um = rospy.ServiceProxy('/uav1/uav_manager/land', Trigger)
    reqa = Trigger._request_class()
    um(reqa)
-   
+
 
 def decolar():
     print('D')
@@ -41,14 +40,14 @@ def rotina():
     rospy.sleep(8)
     decolar()
     rospy.sleep(8)
-    
+
 
 def voar(a):
     rospy.wait_for_service('/uav1/control_manager/reference')
     tres = rospy.ServiceProxy('/uav1/control_manager/reference',ReferenceStampedSrv)
-    
+
     reqc = ReferenceStampedSrv._request_class()
-    
+
     x =a[0]
     y = a[1]
     z = a[2]
@@ -58,7 +57,7 @@ def voar(a):
     reqc.reference.position.z = z
     reqc.reference.heading = 0
     tres(reqc)
-   
+
     checar(lista)
 
 def velocidade():
@@ -66,19 +65,19 @@ def velocidade():
     quatro = rospy.ServiceProxy('/uav1/constraint_manager/set_constraints',String)
     reqd = String._request_class()
     reqd.value = 'slow'
-        
+
     quatro(reqd)
 
 def checar(a):
-    global check 
+    global check
     while check == False:
         pt = rospy.wait_for_message('/uav1/control_manager/position_cmd',PositionCommand)
         compara(pt,a)
         print(check)
-    check = False    
+    check = False
 
 def compara(msg,w):
-    global check 
+    global check
     posx = msg.position.x
     posy = msg.position.y
     posz = msg.position.z
@@ -87,7 +86,7 @@ def compara(msg,w):
         check = True
     else:
         check = False
-    return()    
+    return()
 
 '''
 def getListObject():
@@ -116,7 +115,7 @@ if __name__ == '__main__':
     try:
         velocidade()
         pontos = [[6,2,2.5],[4,2,2.5],[2,2,2.5],[2,3.5,2.5],[4,3.5,2],[6,3.5,2],[7.5,3.5,2],[7.5,5,2],[6,5,2],[4,5,2],[2,5,2],[2,7.5,2],[4,7.5,2],[6,7.5,2],[7.5,7.5,2],[8.1,2,2]]
-        
+
         decolar()
 
         rospy.sleep(8)
@@ -125,16 +124,10 @@ if __name__ == '__main__':
             voar(i)
         
         rospy.sleep(4)
-        pousar()  
+        pousar()
 
-        #getListObject()  
-        
+        #getListObject()
+
 
     except rospy.ROSInternalException:
-        pass    
-      
-
-
-
-
-
+        pass
