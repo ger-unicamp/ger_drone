@@ -40,7 +40,7 @@ def recebeObjeto(msg):
     # Verifica se um objeto com índice -1 é o mesmo que outro objeto que já está na lista
     if(msg.identifier.index.data == -1):
         # comparar a pose se está próxima (intervalo)
-        # distancia euclidiana numpy.linalg.norm
+        # @todo distancia euclidiana numpy.linalg.norm
         for i in objetos:
             if (i.identifier.type.data == msg.identifier.type.data):
                 if (abs(i.pose.point.x - worldT[0]) < num and
@@ -52,7 +52,9 @@ def recebeObjeto(msg):
     if(msg.identifier.index.data != -1):
         for i in objetos:
             if(i.identifier.index.data == msg.identifier.index.data):
-                novoObjeto.identifier.state.data = msg.identifier.state.data
+                if(i.identifier.type.data == msg.identifier.type.data):
+                    i.identifier.state.data = msg.identifier.state.data
+                return
 
     r = R.from_dcm(worldR)
     quat = r.as_quat()
