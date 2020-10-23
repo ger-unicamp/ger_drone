@@ -64,7 +64,7 @@ def velocidade():
     rospy.wait_for_service('/uav1/constraint_manager/set_constraints')
     quatro = rospy.ServiceProxy('/uav1/constraint_manager/set_constraints',String)
     reqd = String._request_class()
-    reqd.value = 'fast'
+    reqd.value = 'slow'
         
     quatro(reqd)
 
@@ -125,7 +125,7 @@ if __name__ == '__main__':
 
         for i in pontos:
             voar(i)
-            rospy.sleep(1)
+            rospy.sleep(2)
         
         rospy.sleep(4)
     
