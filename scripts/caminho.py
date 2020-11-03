@@ -43,6 +43,7 @@ def rotina():
     
 
 def voar(a):
+    print(a)
     rospy.wait_for_service('/uav1/control_manager/reference')
     tres = rospy.ServiceProxy('/uav1/control_manager/reference',ReferenceStampedSrv)
     
