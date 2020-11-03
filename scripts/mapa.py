@@ -86,6 +86,8 @@ def recebeObjeto(msg):
     novoObjeto.pose.orientation.w = quat[3]
 
     objetos.append(novoObjeto)
+    
+    adicionarArquivo(novoObjeto)
 
 def recebeOdometria(msg):
     global position, rotation
@@ -113,6 +115,52 @@ def entregaListaObjetos(req):
 
     return GetObjectResponse(lista)
 
+def gerarArquivo():
+    # Gera um arquivo com todos os objetos na lista.
+    # Atencao! tudo que ouver no arquivo "mapa_gerado" sera substituido.
+    with open('mapa_gerado.txt', 'w') as arquivo:
+        for i in objetos:
+            arquivo.write(i.identifier.type.data + '\n')
+            arquivo.write(i.identifier.state.data + '\n')
+            arquivo.write(i.pose.point.x + '\n')
+            arquivo.write(i.pose.point.y + '\n')
+            arquivo.write(i.pose.point.z + '\n')
+            arquivo.write(i.pose.orientation.x + '\n')
+            arquivo.write(i.pose.orientation.y + '\n')
+            arquivo.write(i.pose.orientation.z + '\n')
+            arquivo.write(i.pose.orientation.w + '\n')
+
+def adicionarArquivo(novoObjeto):
+    with open('mapa_gerado.txt', 'a') as arquivo:
+            arquivo.write(novoObjeto.identifier.type.data + '\n')
+            arquivo.write(novoObjeto.identifier.state.data + '\n')
+            arquivo.write(novoObjeto.pose.point.x + '\n')
+            arquivo.write(novoObjeto.pose.point.y + '\n')
+            arquivo.write(novoObjeto.pose.point.z + '\n')
+            arquivo.write(novoObjeto.pose.orientation.x + '\n')
+            arquivo.write(novoObjeto.pose.orientation.y + '\n')
+            arquivo.write(novoObjeto.pose.orientation.z + '\n')
+            arquivo.write(novoObjeto.pose.orientation.w + '\n')
+
+def recuperaArquivo():
+    # Gera uma lista de objetos com os dados de "mapa_gerado".
+
+    novoObjeto = Object()
+
+    with open('mapa_gerado.txt', 'r') as arquivo:
+        for i in arquivo:
+            novoObjeto.identifier.type.data = int(i)
+            novoObjeto.identifier.state.data = int(i)
+            novoObjeto.pose.point.x = float(i)
+            novoObjeto.pose.point.y = float(i)
+            novoObjeto.pose.point.z = float(i)
+            novoObjeto.pose.orientation.x = float(i)
+            novoObjeto.pose.orientation.y = float(i)
+            novoObjeto.pose.orientation.z = float(i)
+            novoObjeto.pose.orientation.w = float(i)
+            # Adiciona o objeto na lista global "objetos"
+            objetos.append(novoObjeto)
+
 if __name__ == '__main__':
     try:
 
@@ -130,7 +178,10 @@ if __name__ == '__main__':
 
         # Define a frequência de execução em Hz
         rate = rospy.Rate(10)
-
+        
+        # Inicia a lista de objetos com os contidos no arquivo "mapa_gerado.txt"
+        recuperaArquivo()
+        
         # Checa por mensagem ou serviço
         while not rospy.is_shutdown():
 
