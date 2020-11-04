@@ -56,6 +56,7 @@ add_message_files(
    Identifier.msg
    Object.msg
    ObjectState.msg
+   LedColor.msg
  )
 
 ## Generate services in the 'srv' folder

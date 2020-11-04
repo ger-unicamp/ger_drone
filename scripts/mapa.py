@@ -9,13 +9,13 @@ from matplotlib import pyplot as plt
 from mrs_msgs.msg import UavState
 from ger_drone.msg import Object, Identifier, ObjectState
 
-from ger_drone.srv import GetObject, Identifier, GetObjectResponse
+from ger_drone.srv import GetObject, GetObjectResponse
 
 
 # Lista de bases inicialmente vazia
 objetos = []
 
-# Vetor de posições para cálculo de coordenadas
+# Vetor de posicoes para calculo de coordenadas
 position = np.asarray([0,0,0])
 rotation = np.asarray([[1,0,0],[0,1,0],[0,0,1]])
 
@@ -37,18 +37,18 @@ def recebeObjeto(msg):
     if(worldT[1] > 8 or worldT[1] < 0):
         return
 
-    # Verifica se um objeto com índice -1 é o mesmo que outro objeto que já está na lista
+    # Verifica se um objeto com indice -1 e o mesmo que outro objeto que ja esta na lista
     if(msg.identifier.index.data == -1):
-        # comparar a pose se está próxima (intervalo)
+        # comparar a pose se esta proxima (intervalo)
         # @todo distancia euclidiana numpy.linalg.norm
         for i in objetos:
             if (i.identifier.type.data == msg.identifier.type.data):
-                if (abs(i.pose.point.x - worldT[0]) < num and
-                    abs(i.pose.point.y - worldT[1]) < num and
-                    abs(i.pose.point.z - worldT[2]) < num)
+                if (abs(i.pose.point.x - worldT[0]) < num and 
+                abs(i.pose.point.y - worldT[1]) < num and 
+                abs(i.pose.point.z - worldT[2]) < num):
                     return
 
-    # Se objeto retornar com índice != -1, verificar se o tipo bate com o objeto já na lista, e atualizar o estado
+    # Se objeto retornar com indice != -1, verificar se o tipo bate com o objeto ja na lista, e atualizar o estado
     if(msg.identifier.index.data != -1):
         for i in objetos:
             if(i.identifier.index.data == msg.identifier.index.data):
@@ -100,18 +100,18 @@ def recebeOdometria(msg):
     rotation = r.as_dcm()
 
 
-# Handler da função retorna serviço GetObject
+# Handler da funcao retorna servico GetObject
 def entregaListaObjetos(req):
 
     lista = [] #Lista com objetos que atendem o pedido
 
     # Monta lista com objetos com mesmo estado e tipo requisitados
-    for i in objetos
+    for i in objetos:
         if (req.identifier.state.data == i.identifier.state.data and req.identifier.type.data == i.identifier.type.data):
             lista.append(i)
 
-    # Tópico 3: http://wiki.ros.org/rospy/Overview/Services
-    # Tópico 1: http://wiki.ros.org/ROS/Tutorials/WritingServiceClient%28python%29
+    # Topico 3: http://wiki.ros.org/rospy/Overview/Services
+    # Topico 1: http://wiki.ros.org/ROS/Tutorials/WritingServiceClient%28python%29
 
     return GetObjectResponse(lista)
 
@@ -147,45 +147,48 @@ def recuperaArquivo():
 
     novoObjeto = Object()
 
-    with open('mapa_gerado.txt', 'r') as arquivo:
-        for i in arquivo:
-            novoObjeto.identifier.type.data = int(i)
-            novoObjeto.identifier.state.data = int(i)
-            novoObjeto.pose.point.x = float(i)
-            novoObjeto.pose.point.y = float(i)
-            novoObjeto.pose.point.z = float(i)
-            novoObjeto.pose.orientation.x = float(i)
-            novoObjeto.pose.orientation.y = float(i)
-            novoObjeto.pose.orientation.z = float(i)
-            novoObjeto.pose.orientation.w = float(i)
-            # Adiciona o objeto na lista global "objetos"
-            objetos.append(novoObjeto)
+    try:
+        with open('mapa_gerado.txt', 'r') as arquivo:
+            for i in arquivo:
+                novoObjeto.identifier.type.data = int(i)
+                novoObjeto.identifier.state.data = int(i)
+                novoObjeto.pose.point.x = float(i)
+                novoObjeto.pose.point.y = float(i)
+                novoObjeto.pose.point.z = float(i)
+                novoObjeto.pose.orientation.x = float(i)
+                novoObjeto.pose.orientation.y = float(i)
+                novoObjeto.pose.orientation.z = float(i)
+                novoObjeto.pose.orientation.w = float(i)
+                # Adiciona o objeto na lista global "objetos"
+                objetos.append(novoObjeto)
+    except:
+        return
 
 if __name__ == '__main__':
     try:
 
-        # Inicia nó com nome 'mapa'
+        # Inicia no com nome 'mapa'
         rospy.init_node('mapa', anonymous="True")
 
         # Subscriber para receber objeto por mensagem
         rospy.Subscriber('objeto_detectado', Object, recebeObjeto)
 
         # Subscriber para receber odometria
-        rospy.Subscriber('/uav1/odometry/uav_state', UavState, recebeOdometria)
+        rospy.Subscriber('uav_state', UavState, recebeOdometria)
 
-        # Serviço GetObject para entregar objetos
+        # Servico GetObject para entregar objetos
         rospy.Service('get_object', GetObject, entregaListaObjetos)
 
-        # Define a frequência de execução em Hz
+        # Define a frequencia de execucao em Hz
         rate = rospy.Rate(10)
         
         # Inicia a lista de objetos com os contidos no arquivo "mapa_gerado.txt"
         recuperaArquivo()
         
-        # Checa por mensagem ou serviço
+        # Checa por mensagem ou servico
         while not rospy.is_shutdown():
 
-            # Espera o tempo para executar o programa na frequência definida
+            # Espera o tempo para executar o programa na frequencia definida
             rate.sleep()
 
     except rospy.ROSInternalException:

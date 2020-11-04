@@ -2,10 +2,9 @@ roslaunch mrs_uav_status status.launch
 export ODOMETRY_TYPE=hector
  roslaunch mrs_uav_general hector_slam.launch 
 
- "PrepareUAV" "waitForControl; 
- sleep 5; 
- rosservice call /uav1/constraint_manager/set_constraints slow; 
- rosservice call /$UAV_NAME/mavros/set_mode 0 offboard; 
- rosservice call /uav1/control_manager/use_safety_area \"data: false\"; 
- rosservice call /uav1/control_manager/set_min_height \"value: 0.0\";
-  rosservice call /$UAV_NAME/mavros/cmd/arming 1
+ "PrepareUAV" "waitForControl; sleep 5; rosservice call /uav1/constraint_manager/set_constraints slow; rosservice call /$UAV_NAME/mavros/set_mode 0 offboard; rosservice call /uav1/control_manager/use_safety_area \"data: false\"; rosservice call /uav1/control_manager/set_min_height \"value: 0.0\";rosservice call /$UAV_NAME/mavros/cmd/arming 1
+
+ input=(
+    'padrao' "roslaunch ger_drone padrao.launch;"
+    'fase1' "roslaunch ger_drone fase1.launch;"
+)

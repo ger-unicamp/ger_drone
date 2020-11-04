@@ -1,0 +1,9 @@
+<!--
+    Inicializa APENAS os nos relacionados a primeira fase 
+-->
+<launch>
+
+    <node name="fase4" pkg="ger_drone" type="fase4.py" ns="/ger_drone" />
+    <node name="led" pkg="ger_drone" type="led_simulado.py" ns="/ger_drone"/>
+
+</launch>
