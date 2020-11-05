@@ -119,6 +119,7 @@ if __name__ == '__main__':
 
         rate = rospy.Rate(10) #Define a frequencia de execucao em Hz
 
+    
 
         while not rospy.is_shutdown():
 

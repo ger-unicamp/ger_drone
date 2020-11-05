@@ -4,8 +4,5 @@
 
 <launch>
     <node name="image_proc" pkg="image_proc" type="image_proc" ns="/uav1/bluefox_optflow"/>
-    <node name="mapa" pkg="ger_drone"  type="mapa.py" ns="/ger_drone" output="screen">
-        <remap from="uav_state" to="/uav1/odometry/uav_state" />
-    </node>
     
 </launch>

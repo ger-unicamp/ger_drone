@@ -6,4 +6,10 @@
     <node name="fase3" pkg="ger_drone" type="fase3.py" ns="/ger_drone" />
     <node name="led" pkg="ger_drone" type="led_simulado.py" ns="/ger_drone"/>
 
+    <node name="mapa" pkg="ger_drone"  type="mapa.py" ns="/ger_drone" output="screen">
+        <remap from="uav_state" to="/uav1/odometry/uav_state" />
+        <param name="escrever" value="false"/>
+        <param name="ler" value="true"/>
+    </node>
+
 </launch>

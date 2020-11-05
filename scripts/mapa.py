@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import rospy
+import rospkg
 
 import numpy as np
 from scipy.spatial.transform import Rotation as R
@@ -11,6 +12,7 @@ from ger_drone.msg import Object, Identifier, ObjectState
 
 from ger_drone.srv import GetObject, GetObjectResponse
 
+import csv
 
 # Lista de bases inicialmente vazia
 objetos = []
@@ -89,7 +91,6 @@ def recebeObjeto(msg):
 
     objetos.append(novoObjeto)
     logObjetos()
-    adicionarArquivo(novoObjeto)
 
 def recebeOdometria(msg):
     global position, rotation
@@ -103,7 +104,7 @@ def recebeOdometria(msg):
 
 def logObjetos():
     log = str(len(objetos))
-    log = log +" Objetos encontrados. \n"
+    log = log +" Objetos armazenados. \n"
 
     for obj in objetos:
         log = log + "["+str(obj.identifier.index.data)+"]: "+str(obj.identifier.type.data)
@@ -130,50 +131,69 @@ def entregaListaObjetos(req):
 def gerarArquivo():
     # Gera um arquivo com todos os objetos na lista.
     # Atencao! tudo que ouver no arquivo "mapa_gerado" sera substituido.
-    with open('mapa_gerado.txt', 'w') as arquivo:
-        for i in objetos:
-            arquivo.write(i.identifier.type.data + '\n')
-            arquivo.write(i.identifier.state.data + '\n')
-            arquivo.write(i.pose.position.x + '\n')
-            arquivo.write(i.pose.position.y + '\n')
-            arquivo.write(i.pose.position.z + '\n')
-            arquivo.write(i.pose.orientation.x + '\n')
-            arquivo.write(i.pose.orientation.y + '\n')
-            arquivo.write(i.pose.orientation.z + '\n')
-            arquivo.write(i.pose.orientation.w + '\n')
+    
+    with open(path, 'w') as arquivo:
+        writer = csv.writer(arquivo, delimiter=',')
 
-def adicionarArquivo(novoObjeto):
-    with open('mapa_gerado.txt', 'a') as arquivo:
-            arquivo.write(novoObjeto.identifier.type.data + '\n')
-            arquivo.write(novoObjeto.identifier.state.data + '\n')
-            arquivo.write(novoObjeto.pose.position.x + '\n')
-            arquivo.write(novoObjeto.pose.position.y + '\n')
-            arquivo.write(novoObjeto.pose.position.z + '\n')
-            arquivo.write(novoObjeto.pose.orientation.x + '\n')
-            arquivo.write(novoObjeto.pose.orientation.y + '\n')
-            arquivo.write(novoObjeto.pose.orientation.z + '\n')
-            arquivo.write(novoObjeto.pose.orientation.w + '\n')
+        for obj in objetos:
+            row = geraLinhaCSV(obj)
+
+            writer.writerow(row)
+
+
+def geraLinhaCSV(objeto):
+    row =[str(objeto.identifier.index.data),
+            str(objeto.identifier.type.data ),
+            str(objeto.identifier.state.data ),
+            str(objeto.pose.position.x ),
+            str(objeto.pose.position.y ),
+            str(objeto.pose.position.z  ),
+            str(objeto.pose.orientation.x ),
+            str(objeto.pose.orientation.y ),
+            str(objeto.pose.orientation.z ),
+            str(objeto.pose.orientation.w  )]
+    
+    return row
+
+def appendObjeto(objeto):
+    with open(path, 'a') as arquivo:
+        writer = csv.writer(arquivo, delimiter=',')
+
+        row = geraLinhaCSV(objeto)
+
+        writer.writerow(row)
+    
+            
 
 def recuperaArquivo():
     # Gera uma lista de objetos com os dados de "mapa_gerado".
-
-    novoObjeto = Object()
-
+    
     try:
-        with open('mapa_gerado.txt', 'r') as arquivo:
-            for i in arquivo:
-                novoObjeto.identifier.type.data = int(i)
-                novoObjeto.identifier.state.data = int(i)
-                novoObjeto.pose.position.x = float(i)
-                novoObjeto.pose.position.y = float(i)
-                novoObjeto.pose.position.z = float(i)
-                novoObjeto.pose.orientation.x = float(i)
-                novoObjeto.pose.orientation.y = float(i)
-                novoObjeto.pose.orientation.z = float(i)
-                novoObjeto.pose.orientation.w = float(i)
+        with open(path, 'r') as arquivo:
+            reader = csv.reader(arquivo, delimiter=',')
+
+            arquivo.seek(0)
+
+            for row in reader:
+                novoObjeto = Object()
+
+                novoObjeto.identifier.index.data = int(row[0])
+                novoObjeto.identifier.type.data = int(row[1])
+                novoObjeto.identifier.state.data = int(row[2])
+                novoObjeto.pose.position.x = float(row[3])
+                novoObjeto.pose.position.y = float(row[4])
+                novoObjeto.pose.position.z = float(row[5])
+                novoObjeto.pose.orientation.x = float(row[6])
+                novoObjeto.pose.orientation.y = float(row[7])
+                novoObjeto.pose.orientation.z = float(row[8])
+                novoObjeto.pose.orientation.w = float(row[9])
+
                 # Adiciona o objeto na lista global "objetos"
                 objetos.append(novoObjeto)
+
+        rospy.loginfo("Arquivo lido com sucesso, "+str(len(objetos))+" objetos armazenados")
     except:
+        rospy.logwarn("Nao foi possivel ler o arquivo")
         return
 
 if __name__ == '__main__':
@@ -181,6 +201,31 @@ if __name__ == '__main__':
 
         # Inicia no com nome 'mapa'
         rospy.init_node('mapa', anonymous="True")
+
+        escreve = False
+        le = False
+        
+        try:
+            escreve = rospy.get_param("~escrever")
+        except:
+            pass
+
+        try:
+            le = rospy.get_param("~ler")
+        except:
+            pass
+
+        rospy.loginfo("Escrita de arquivo definido para: "+str(escreve))
+        rospy.loginfo("Leitura de arquivo definido para: "+str(le))
+
+        path = rospkg.RosPack().get_path('ger_drone')
+
+        path = path + "/data/mapa_gerado.csv"
+        
+        # Inicia a lista de objetos com os contidos no arquivo 
+        
+        if le == True:
+            recuperaArquivo()
 
         # Subscriber para receber objeto por mensagem
         rospy.Subscriber('objeto_detectado', Object, recebeObjeto)
@@ -194,8 +239,6 @@ if __name__ == '__main__':
         # Define a frequencia de execucao em Hz
         rate = rospy.Rate(10)
         
-        # Inicia a lista de objetos com os contidos no arquivo "mapa_gerado.txt"
-        recuperaArquivo()
         
         # Checa por mensagem ou servico
         while not rospy.is_shutdown():
@@ -203,5 +246,11 @@ if __name__ == '__main__':
             # Espera o tempo para executar o programa na frequencia definida
             rate.sleep()
 
+        if(escreve == True):
+            gerarArquivo()
+
     except rospy.ROSInternalException:
+        if(escreve == True):
+            gerarArquivo()
+
         pass
