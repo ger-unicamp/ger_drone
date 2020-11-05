@@ -30,11 +30,13 @@ input=(
     "
     'fase' "waitForRos; roslaunch ger_drone fase$1.launch;
     " 
+    'status' "roslaunch mrs_uav_status status.launch;
+    "
 
 )
 
 
-init_window="fase1"
+init_window="fase"
 
 ###########################
 ### DO NOT MODIFY BELOW ###

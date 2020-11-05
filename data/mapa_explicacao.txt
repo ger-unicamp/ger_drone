@@ -1,0 +1,33 @@
+Cada linha do arquivo mapa_gerado.csv contém um objeto
+
+O divisor decimal é ponto
+
+Cada objeto é definido pelas colunas, em ordem, separadas por virgula:
+    indice:int = indice do objeto (iniciando em 0)
+    type:int = tipo do objeto
+    state:int = estado do objeto
+    x:float = posição x do objeto
+    y:float = posição y do objeto
+    z:float = posição z do objeto
+    rot_x:float = coordenada x do quaternion do rotacao do objeto
+    rot_y:float = coordenada y do quaternion do rotacao do objeto
+    rot_z:float = coordenada z do quaternion do rotacao do objeto
+    rot_w:float = coordenada w do quaternion do rotacao do objeto
+
+Os tipos aceitos para um objeto:
+    0 = Base costeira
+    1 = Base
+    2 = Oleoduto
+    3 = Sensor de monitoramento vermelho
+    4 = Sensor de monitoramento verde
+    5 = Mostrador digital
+    6 = Pacote com QR code com letra A
+    7 = Pacote com QR code com letra B
+    8 = Pacote com QR code com letra C
+    9 = Pacote com QR code com letra D
+    10 = Pacote com QR code com letra E
+
+Os estados aceitos para um objeto:
+    -1 = Desconhecido
+    0 = não processado (ainda não foi realizada a ação que seria esperado em relação ao objeto)
+    1 = processado (foi realizado a ação necessária)
