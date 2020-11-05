@@ -40,7 +40,7 @@ init_window="fase1"
 ### DO NOT MODIFY BELOW ###
 ###########################
 
-SESSION_NAME=mav
+SESSION_NAME=gerdrone
 
 # prefere the user-compiled tmux
 if [ -f /usr/local/bin/tmux ]; then

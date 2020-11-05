@@ -21,6 +21,8 @@ rotation = np.asarray([[1,0,0],[0,1,0],[0,0,1]])
 
 indiceMaximo = -1
 
+num = 1
+
 # Cria e insere objeto da mensagem na lista
 def recebeObjeto(msg):
 
@@ -43,9 +45,9 @@ def recebeObjeto(msg):
         # @todo distancia euclidiana numpy.linalg.norm
         for i in objetos:
             if (i.identifier.type.data == msg.identifier.type.data):
-                if (abs(i.pose.point.x - worldT[0]) < num and 
-                abs(i.pose.point.y - worldT[1]) < num and 
-                abs(i.pose.point.z - worldT[2]) < num):
+                if (abs(i.pose.position.x - worldT[0]) < num and 
+                abs(i.pose.position.y - worldT[1]) < num and 
+                abs(i.pose.position.z - worldT[2]) < num):
                     return
 
     # Se objeto retornar com indice != -1, verificar se o tipo bate com o objeto ja na lista, e atualizar o estado
@@ -75,9 +77,9 @@ def recebeObjeto(msg):
     novoObjeto.identifier.state.data = estado
     
     #pose do objeto
-    novoObjeto.pose.point.x = worldT[0]
-    novoObjeto.pose.point.y = worldT[1]
-    novoObjeto.pose.point.z = worldT[2]
+    novoObjeto.pose.position.x = worldT[0]
+    novoObjeto.pose.position.y = worldT[1]
+    novoObjeto.pose.position.z = worldT[2]
     
     #quat do objeto
     novoObjeto.pose.orientation.x = quat[0]
@@ -86,7 +88,7 @@ def recebeObjeto(msg):
     novoObjeto.pose.orientation.w = quat[3]
 
     objetos.append(novoObjeto)
-    
+    logObjetos()
     adicionarArquivo(novoObjeto)
 
 def recebeOdometria(msg):
@@ -99,6 +101,16 @@ def recebeOdometria(msg):
     r = R.from_quat([msg.pose.orientation.x, msg.pose.orientation.y,msg.pose.orientation.z,msg.pose.orientation.w])
     rotation = r.as_dcm()
 
+def logObjetos():
+    log = str(len(objetos))
+    log = log +" Objetos encontrados. \n"
+
+    for obj in objetos:
+        log = log + "["+str(obj.identifier.index.data)+"]: "+str(obj.identifier.type.data)
+        log = log + " x: "+str(obj.pose.position.x)+" y: "+str(obj.pose.position.y)+" z: "+str(obj.pose.position.z)
+        log = log + "\n"
+
+    rospy.loginfo(log)
 
 # Handler da funcao retorna servico GetObject
 def entregaListaObjetos(req):
@@ -122,9 +134,9 @@ def gerarArquivo():
         for i in objetos:
             arquivo.write(i.identifier.type.data + '\n')
             arquivo.write(i.identifier.state.data + '\n')
-            arquivo.write(i.pose.point.x + '\n')
-            arquivo.write(i.pose.point.y + '\n')
-            arquivo.write(i.pose.point.z + '\n')
+            arquivo.write(i.pose.position.x + '\n')
+            arquivo.write(i.pose.position.y + '\n')
+            arquivo.write(i.pose.position.z + '\n')
             arquivo.write(i.pose.orientation.x + '\n')
             arquivo.write(i.pose.orientation.y + '\n')
             arquivo.write(i.pose.orientation.z + '\n')
@@ -134,9 +146,9 @@ def adicionarArquivo(novoObjeto):
     with open('mapa_gerado.txt', 'a') as arquivo:
             arquivo.write(novoObjeto.identifier.type.data + '\n')
             arquivo.write(novoObjeto.identifier.state.data + '\n')
-            arquivo.write(novoObjeto.pose.point.x + '\n')
-            arquivo.write(novoObjeto.pose.point.y + '\n')
-            arquivo.write(novoObjeto.pose.point.z + '\n')
+            arquivo.write(novoObjeto.pose.position.x + '\n')
+            arquivo.write(novoObjeto.pose.position.y + '\n')
+            arquivo.write(novoObjeto.pose.position.z + '\n')
             arquivo.write(novoObjeto.pose.orientation.x + '\n')
             arquivo.write(novoObjeto.pose.orientation.y + '\n')
             arquivo.write(novoObjeto.pose.orientation.z + '\n')
@@ -152,9 +164,9 @@ def recuperaArquivo():
             for i in arquivo:
                 novoObjeto.identifier.type.data = int(i)
                 novoObjeto.identifier.state.data = int(i)
-                novoObjeto.pose.point.x = float(i)
-                novoObjeto.pose.point.y = float(i)
-                novoObjeto.pose.point.z = float(i)
+                novoObjeto.pose.position.x = float(i)
+                novoObjeto.pose.position.y = float(i)
+                novoObjeto.pose.position.z = float(i)
                 novoObjeto.pose.orientation.x = float(i)
                 novoObjeto.pose.orientation.y = float(i)
                 novoObjeto.pose.orientation.z = float(i)

@@ -13,7 +13,6 @@ from ger_drone.msg import Identifier
 from cv_bridge import CvBridge, CvBridgeError
 import cv2 as cv
 import numpy as np
-from matplotlib import pyplot as plt
 from scipy.spatial.transform import Rotation
 
 #Constante
