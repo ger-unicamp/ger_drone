@@ -4,7 +4,7 @@ import rospy
 import rospkg
 
 import numpy as np
-from scipy.spatial.transform import Rotation as R
+from scipy.spatial.transform import Rotation
 from matplotlib import pyplot as plt
 import cv2 as cv
 
@@ -19,27 +19,35 @@ import csv
 objetos = []
 
 # Vetor de posicoes para calculo de coordenadas
-position = np.asarray([0,0,0])
-rotation = np.asarray([[1,0,0],[0,1,0],[0,0,1]])
+tDroneWorld = np.asarray([0,0,0])
+RDroneWorld = np.asarray([[1,0,0],[0,1,0],[0,0,1]])
 
 indiceMaximo = -1
 
 num = 1
 
+tCameraDrone = [0.050, 0.0, -0.093]
+RCameraDrone = [0.707, -0.707, 0.0, -0.0]
+RCameraDrone = Rotation.from_quat(RCameraDrone).as_dcm()
+
 # Cria e insere objeto da mensagem na lista
 def recebeObjeto(msg):
 
     # Posicao do obj nas coordenadas da camera
-    cameraT = np.asarray([msg.pose.position.x, msg.pose.position.y, msg.pose.position.z])
-    cameraR = R.from_quat([msg.pose.orientation.x, msg.pose.orientation.y,msg.pose.orientation.z,msg.pose.orientation.w]).as_dcm()
+    tObjCamera = np.asarray([msg.pose.position.x, msg.pose.position.y, msg.pose.position.z])
+    RObjCamera = Rotation.from_quat([msg.pose.orientation.x, msg.pose.orientation.y,msg.pose.orientation.z,msg.pose.orientation.w]).as_dcm()
 
-    # Concatena com a pose do drone para obter a pose no mundo
-    worldR = np.matmul(rotation, cameraR)
-    worldT = position+np.matmul(rotation, cameraT)
+    # Concatena com a pose da camera no drone
+    RObjDrone = np.matmul(RCameraDrone, RObjCamera)
+    tObjDrone = tCameraDrone + np.matmul(RCameraDrone, tObjCamera)
 
-    if(worldT[0] > 8 or worldT[0] < 0):
+    #Concatena com a pose do drone no mundo
+    RObjWorld = np.matmul(RDroneWorld, RObjDrone) 
+    tObjWorld = tDroneWorld + np.matmul(RDroneWorld, tObjDrone)
+
+    if(tObjWorld[0] > 8 or tObjWorld[0] < 0):
         return
-    if(worldT[1] <-8 or worldT[1] > 0):
+    if(tObjWorld[1] <-8 or tObjWorld[1] > 0):
         return
 
     # Verifica se um objeto com indice -1 e o mesmo que outro objeto que ja esta na lista
@@ -49,14 +57,20 @@ def recebeObjeto(msg):
         for i in objetos:
             if (i.identifier.type.data == msg.identifier.type.data):
                 if(i.identifier.type.data == Identifier.TYPE_SENSOR_VERDE or i.identifier.type.data == Identifier.TYPE_SENSOR_VERMELHO ):
-                    if (abs(i.pose.position.x - worldT[0]) < 0.1 and 
-                        abs(i.pose.position.y - worldT[1]) < 0.1 and 
-                        abs(i.pose.position.z - worldT[2]) < 0.1):
+                    #rospy.logwarn(str(i.pose.position.x - tObjWorld[0]))
+                    if (abs(i.pose.position.x - tObjWorld[0]) < 0.1 and 
+                        abs(i.pose.position.y - tObjWorld[1]) < 0.1):
+                            i.pose.position.x += tObjWorld[0]
+                            i.pose.position.y += tObjWorld[1]
+
+                            i.pose.position.x /= 2
+                            i.pose.position.y /= 2
+
                             return
                 else: 
-                    if (abs(i.pose.position.x - worldT[0]) < num and 
-                    abs(i.pose.position.y - worldT[1]) < num and 
-                    abs(i.pose.position.z - worldT[2]) < num):
+                    if (abs(i.pose.position.x - tObjWorld[0]) < num and 
+                    abs(i.pose.position.y - tObjWorld[1]) < num and 
+                    abs(i.pose.position.z - tObjWorld[2]) < num):
                         return
 
     # Se objeto retornar com indice != -1, verificar se o tipo bate com o objeto ja na lista, e atualizar o estado
@@ -67,7 +81,7 @@ def recebeObjeto(msg):
                     i.identifier.state.data = msg.identifier.state.data
                 return
 
-    r = R.from_dcm(worldR)
+    r = Rotation.from_dcm(RObjWorld)
     quat = r.as_quat()
 
     if(msg.identifier.state.data == Identifier.STATE_DESCONHECIDO):
@@ -86,9 +100,9 @@ def recebeObjeto(msg):
     novoObjeto.identifier.state.data = estado
     
     #pose do objeto
-    novoObjeto.pose.position.x = worldT[0]
-    novoObjeto.pose.position.y = worldT[1]
-    novoObjeto.pose.position.z = worldT[2]
+    novoObjeto.pose.position.x = tObjWorld[0]
+    novoObjeto.pose.position.y = tObjWorld[1]
+    novoObjeto.pose.position.z = tObjWorld[2]
     
     #quat do objeto
     novoObjeto.pose.orientation.x = quat[0]
@@ -96,21 +110,23 @@ def recebeObjeto(msg):
     novoObjeto.pose.orientation.z = quat[2]
     novoObjeto.pose.orientation.w = quat[3]
 
+    #novoObjeto.data = msg.data
+
     objetos.append(novoObjeto)
-    logObjetos()
+    #logObjetos()
 
     if imprime == True:
-        imprimeMapa(worldT)
+        imprimeMapa(tObjWorld, novoObjeto.identifier.type.data)
 
 def recebeOdometria(msg):
-    global position, rotation
+    global tDroneWorld, RDroneWorld
 
-    position[0] = msg.pose.position.x
-    position[1] = msg.pose.position.y
-    position[2] = msg.pose.position.z
+    tDroneWorld[0] = msg.pose.position.x
+    tDroneWorld[1] = msg.pose.position.y
+    tDroneWorld[2] = msg.pose.position.z
 
-    r = R.from_quat([msg.pose.orientation.x, msg.pose.orientation.y,msg.pose.orientation.z,msg.pose.orientation.w])
-    rotation = r.as_dcm()
+    r = Rotation.from_quat([msg.pose.orientation.x, msg.pose.orientation.y,msg.pose.orientation.z,msg.pose.orientation.w])
+    RDroneWorld = r.as_dcm()
 
 def logObjetos():
     log = str(len(objetos))
@@ -161,7 +177,8 @@ def geraLinhaCSV(objeto):
             str(objeto.pose.orientation.x ),
             str(objeto.pose.orientation.y ),
             str(objeto.pose.orientation.z ),
-            str(objeto.pose.orientation.w  )]
+            str(objeto.pose.orientation.w  ),
+            objeto.data]
     
     return row
 
@@ -197,6 +214,7 @@ def recuperaArquivo():
                 novoObjeto.pose.orientation.y = float(row[7])
                 novoObjeto.pose.orientation.z = float(row[8])
                 novoObjeto.pose.orientation.w = float(row[9])
+                novoObjeto.data = row[10]
 
                 # Adiciona o objeto na lista global "objetos"
                 objetos.append(novoObjeto)
@@ -206,12 +224,19 @@ def recuperaArquivo():
         rospy.logwarn("Nao foi possivel ler o arquivo")
         return
 
-def imprimeMapa(posicao):
+def imprimeMapa(posicao, tipo):
+
+    cor = [0,0,0]
+
+    if(tipo == Identifier.TYPE_SENSOR_VERDE):
+        cor[1] = 255
+    elif(tipo == Identifier.TYPE_SENSOR_VERMELHO):
+        cor[2] = 255
 
     posicao[0] = posicao[0]*100
     posicao[1] = -posicao[1]*100
 
-    cv.circle(imgMapa, (int(posicao[0]),int(posicao[1])), 10, (255,0,0), -1)
+    cv.circle(imgMapa, (int(posicao[0]),int(posicao[1])), 10, (cor[0],cor[1],cor[2]), -1)
 
 if __name__ == '__main__':
     try:
@@ -252,7 +277,7 @@ if __name__ == '__main__':
 
         if imprime == True:
             imgMapa = np.ones((800,800,3),np.uint8)*255
-            imprimeMapa([0,0])
+            imprimeMapa([0,0], -1)
 
         # Subscriber para receber objeto por mensagem
         rospy.Subscriber('objeto_detectado', Object, recebeObjeto)

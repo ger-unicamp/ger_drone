@@ -19,3 +19,5 @@ int32 STATE_PROCESSADO = 1 #Constante de estado: processado (foi realizado a aç
 std_msgs/Int32 type #Tipo do objeto
 std_msgs/Int32 index #Índice do objeto (-1 para desconhecido)
 std_msgs/Int32 state #Estado do objeto (-1 para desconhecido)
+
+string data #Outros dados que o objeto possui

@@ -52,6 +52,9 @@ def procuraQuadrado(mascara):
         if not cv.isContourConvex(approx):
             continue
 
+        if cv.contourArea(approx) < 100:
+            continue
+
         quadrado = []
 
         for point in approx:
@@ -81,9 +84,7 @@ def estimaPoseSensor(quad):
 
     RCamObj, _ = cv.Rodrigues(RCamObj)
 
-    RObjCamera, tObjCamera = inverteTransformacao(RCamObj, tCamObj)
-
-    return RObjCamera, tObjCamera
+    return RCamObj, tCamObj
 
 
 #Recebe a imagem, procura os quadrados e publica
@@ -128,8 +129,10 @@ def publicaSensor(R, t, cor):
 
     if cor == True:
         msg.identifier.type.data = msg.identifier.TYPE_SENSOR_VERDE
+        rospy.loginfo("VERDE")
     else:
         msg.identifier.type.data = msg.identifier.TYPE_SENSOR_VERMELHO
+        rospy.loginfor("VERMELHO")
     
 
     msg.identifier.state.data = msg.identifier.STATE_DESCONHECIDO
