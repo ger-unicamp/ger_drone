@@ -1,0 +1,8 @@
+<!--
+    Inicia apenas os nos padroes (retifica camera, mapa)
+-->
+
+<launch>
+    <node name="image_proc" pkg="image_proc" type="image_proc" ns="/uav1/bluefox_optflow"/>
+    
+</launch>

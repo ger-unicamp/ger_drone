@@ -1,0 +1,4 @@
+/uav1/bluefox_optflow/image_raw
+/uav1/odometry/uav_state
+
+rosbag record /uav1/bluefox_optflow/image_raw /uav1/odometry/uav_state

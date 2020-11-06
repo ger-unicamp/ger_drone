@@ -15,7 +15,6 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   cv_bridge
   mrs_msgs
-  OpenCV
 )
 
 ## System dependencies are found with CMake's conventions
@@ -57,6 +56,7 @@ add_message_files(
    Identifier.msg
    Object.msg
    ObjectState.msg
+   LedColor.msg
  )
 
 ## Generate services in the 'srv' folder
@@ -124,7 +124,6 @@ catkin_package(
 include_directories(
 # include
   ${catkin_INCLUDE_DIRS}
-  ${OpenCV_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
