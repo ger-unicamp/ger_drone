@@ -120,6 +120,7 @@ def recebeImagem(msg):
         R, t = estimaPoseSensor(quad)
         publicaSensor(R, t, False)
 
+    #rospy.loginfo("Detectados "+str(len(quadVerm)+len(quadVerde))+" sensores")
 
 #@param cor - True se verde, False se vermelho
 def publicaSensor(R, t, cor):
@@ -148,7 +149,7 @@ def publicaSensor(R, t, cor):
     msg.pose.orientation.z = quat[2]
     msg.pose.orientation.w = quat[3]
 
-    pubCubo.publish(msg)
+    pubSensor.publish(msg)
 
 def recebeInfo(msg):  
 
@@ -171,7 +172,7 @@ if __name__ == '__main__':
         rospy.Subscriber('image_rect_color', Image, recebeImagem)
         rospy.Subscriber('camera_info', CameraInfo, recebeInfo)
 
-        pubCubo = rospy.Publisher('objeto_detectado',Object, queue_size=10)
+        pubSensor = rospy.Publisher('objeto_detectado',Object, queue_size=10)
 
         #Inscricao para publicar/receber aqui!
 

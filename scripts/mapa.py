@@ -6,6 +6,7 @@ import rospkg
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 from matplotlib import pyplot as plt
+import cv2 as cv
 
 from mrs_msgs.msg import UavState
 from ger_drone.msg import Object, Identifier, ObjectState
@@ -38,7 +39,7 @@ def recebeObjeto(msg):
 
     if(worldT[0] > 8 or worldT[0] < 0):
         return
-    if(worldT[1] > 8 or worldT[1] < 0):
+    if(worldT[1] <-8 or worldT[1] > 0):
         return
 
     # Verifica se um objeto com indice -1 e o mesmo que outro objeto que ja esta na lista
@@ -47,10 +48,16 @@ def recebeObjeto(msg):
         # @todo distancia euclidiana numpy.linalg.norm
         for i in objetos:
             if (i.identifier.type.data == msg.identifier.type.data):
-                if (abs(i.pose.position.x - worldT[0]) < num and 
-                abs(i.pose.position.y - worldT[1]) < num and 
-                abs(i.pose.position.z - worldT[2]) < num):
-                    return
+                if(i.identifier.type.data == Identifier.TYPE_SENSOR_VERDE or i.identifier.type.data == Identifier.TYPE_SENSOR_VERMELHO ):
+                    if (abs(i.pose.position.x - worldT[0]) < 0.1 and 
+                        abs(i.pose.position.y - worldT[1]) < 0.1 and 
+                        abs(i.pose.position.z - worldT[2]) < 0.1):
+                            return
+                else: 
+                    if (abs(i.pose.position.x - worldT[0]) < num and 
+                    abs(i.pose.position.y - worldT[1]) < num and 
+                    abs(i.pose.position.z - worldT[2]) < num):
+                        return
 
     # Se objeto retornar com indice != -1, verificar se o tipo bate com o objeto ja na lista, e atualizar o estado
     if(msg.identifier.index.data != -1):
@@ -91,6 +98,9 @@ def recebeObjeto(msg):
 
     objetos.append(novoObjeto)
     logObjetos()
+
+    if imprime == True:
+        imprimeMapa(worldT)
 
 def recebeOdometria(msg):
     global position, rotation
@@ -196,6 +206,13 @@ def recuperaArquivo():
         rospy.logwarn("Nao foi possivel ler o arquivo")
         return
 
+def imprimeMapa(posicao):
+
+    posicao[0] = posicao[0]*100
+    posicao[1] = -posicao[1]*100
+
+    cv.circle(imgMapa, (int(posicao[0]),int(posicao[1])), 10, (255,0,0), -1)
+
 if __name__ == '__main__':
     try:
 
@@ -204,6 +221,7 @@ if __name__ == '__main__':
 
         escreve = False
         le = False
+        imprime = False
         
         try:
             escreve = rospy.get_param("~escrever")
@@ -212,6 +230,11 @@ if __name__ == '__main__':
 
         try:
             le = rospy.get_param("~ler")
+        except:
+            pass
+
+        try:
+            imprime = rospy.get_param("~imprimir")
         except:
             pass
 
@@ -227,6 +250,10 @@ if __name__ == '__main__':
         if le == True:
             recuperaArquivo()
 
+        if imprime == True:
+            imgMapa = np.ones((800,800,3),np.uint8)*255
+            imprimeMapa([0,0])
+
         # Subscriber para receber objeto por mensagem
         rospy.Subscriber('objeto_detectado', Object, recebeObjeto)
 
@@ -239,18 +266,21 @@ if __name__ == '__main__':
         # Define a frequencia de execucao em Hz
         rate = rospy.Rate(10)
         
-        
+
         # Checa por mensagem ou servico
         while not rospy.is_shutdown():
-
+            if imprime == True:
+                cv.imshow("Mapa", imgMapa)
+                cv.waitKey(1)
             # Espera o tempo para executar o programa na frequencia definida
             rate.sleep()
 
         if(escreve == True):
             gerarArquivo()
 
+        cv.destroyAllWindows()
     except rospy.ROSInternalException:
         if(escreve == True):
             gerarArquivo()
-
+        cv.destroyAllWindows()
         pass

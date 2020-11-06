@@ -50,7 +50,7 @@ def voar(a):
     reqc = ReferenceStampedSrv._request_class()
     
     x = a[0]
-    y = a[1]
+    y = -a[1]
     z = a[2]
     lista = [x,y,z]
     reqc.reference.position.x = x
@@ -136,7 +136,7 @@ if __name__ == '__main__':
         getListObject()  
         
         #voltar e finalizar
-        base = [8.1,2,2.5]
+        base = [8.1,-2,2.5]
         voar(base)
         rospy.sleep(2)
         pousar()
