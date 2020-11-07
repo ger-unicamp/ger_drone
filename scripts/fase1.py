@@ -50,7 +50,7 @@ def voar(a):
     reqc = ReferenceStampedSrv._request_class()
     
     x = a[0]
-    y = -a[1]
+    y = a[1]
     z = a[2]
     lista = [x,y,z]
     reqc.reference.position.x = x
@@ -82,7 +82,7 @@ def compara(msg,w):
     posx = msg.position.x
     posy = msg.position.y
     posz = msg.position.z
-    if (posx < w[0] + 0.1 and posx > w[0] - 0.1) and (posy < w[1] + 0.1 and posy > w[1] - 0.1):
+    if (posx < w[0] + 0.01 and posx > w[0] - 0.01) and (posy < w[1] + 0.01 and posy > w[1] - 0.01):
         print('pronto')
         check = True
     else:
@@ -111,7 +111,7 @@ def getPose(lista):
     for j in listaPoses:
         print(j)
         voar(j)
-        rospy.sleep(2)
+        rospy.sleep(4)
         rotina()
 
 
@@ -119,8 +119,8 @@ if __name__ == '__main__':
     try:
         
         velocidade()
-        pontos = [[6,2,2.5],[4,2,2.5],[2,2,2.5],[2,3.5,2.5],[4,3.5,2],[6,3.5,2],[7.5,3.5,2],[7.5,5,2],[6,5,2],[4,5,2],[2,5,2],[2,7.5,2],[4,7.5,2],[6,7.5,2],[7.5,7.5,2],[8.1,2,2]]
-        
+        #pontos = [[6,2,2.5],[4,2,2.5],[2,2,2.5],[2,3.5,2.5],[4,3.5,2],[6,3.5,2],[7.5,3.5,2],[7.5,5,2],[6,5,2],[4,5,2],[2,5,2],[2,7.5,2],[4,7.5,2],[6,7.5,2],[7.5,7.5,2],[8.1,2,2]]
+        pontos = [[2,0,3],[4,0,3], [6,0,3],[6,-1.5,3] ,[4,-1.5,3] ,[2,-1.5,3],[0,-1.5,3],[0,-3,3], [2,-3,3], [4,-3,3], [6,-3,3],[6,-4.5,3], [4,-4.5,3], [2,-4.5,3],[0,-4.5,3],[0,-6,3],[2,-6,3], [4,-6,3], [6,-6,3]]
         decolar()
 
         rospy.sleep(8)
@@ -136,7 +136,8 @@ if __name__ == '__main__':
         getListObject()  
         
         #voltar e finalizar
-        base = [8.1,-2,2.5]
+        #base = [8.1,-2,2.5]
+        base = [0,0,2]
         voar(base)
         rospy.sleep(2)
         pousar()
