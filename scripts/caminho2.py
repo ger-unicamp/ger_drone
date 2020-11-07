@@ -82,7 +82,7 @@ if __name__ == '__main__':
         decolar()
         rospy.sleep(8)
         # eq do caminho y = -4.97143x +29.708   entre x = 5.6 e x =4.4
-        partida = [5.6,1.8,0.8]
+        partida = [2.5,0.2,0.8]
         voar(partida)
         rospy.sleep(4)
     
@@ -92,13 +92,13 @@ if __name__ == '__main__':
         poses =[]
         z = 0.8
         for i in range(0,6):
-            p = 5.6 - n*(1.2/6)
+            p = 2.65 + n*(1.2/6)
             n = n+1
             px.append(p)
         
-        px.append(4.4)
+        px.append(3.85)
         for j in px:
-            y = -4.97143*j + 29.708
+            y = -5.25*j + 13.9125
             poses.append([j,y,z])    
 
         for h in poses:
@@ -106,9 +106,15 @@ if __name__ == '__main__':
             rospy.sleep(5)
 
         rospy.sleep(5)
-        voar([8.1,1.8,1.5])
+        voar([0,0,1.5])
         rospy.sleep(2)
         pousar()    
 
     except rospy.ROSInternalException:
         pass    
+
+
+
+
+      #[2.5 0.2] 
+      #[3.7 -6.3]
