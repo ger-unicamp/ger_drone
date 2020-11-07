@@ -17,12 +17,13 @@ if __name__ == '__main__':
         srv = rospy.ServiceProxy('/uav1/control_manager/goto', Vec4)
 
         req.goal[0] = 5
-        req.goal[1] = 1.8
-        req.goal[2] = 2.5
+        req.goal[1] = -5
+        req.goal[2] = 1
         req.goal[3] = 0
         srv(req)
         rospy.sleep(10)
         
+
         rospy.wait_for_service('/uav1/uav_manager/land')
         oi = rospy.ServiceProxy('/uav1/uav_manager/land', Trigger)
         reqq = Trigger._request_class()
