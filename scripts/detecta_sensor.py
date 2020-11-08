@@ -37,8 +37,13 @@ def inverteTransformacao(R, t):
 def procuraQuadrado(mascara):
     kernel = np.ones((5,5),np.uint8)
     
-    bordas = cv.Canny(mascara, 100, 500, kernel)
-    contours,hierarchy = cv.findContours(bordas, cv.RETR_TREE, cv.CHAIN_APPROX_NONE)
+    contours = []
+    hierarchy = []
+
+    try:
+        contours,hierarchy = cv.findContours(bordas, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE)
+    except:
+        _, contours, hierarchy = cv.findContours(bordas, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE)
 
     quadrados = []
 
