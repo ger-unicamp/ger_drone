@@ -9,40 +9,53 @@ from mrs_msgs.srv import ReferenceStampedSrv
 from geometry_msgs.msg import Point
 from mrs_msgs.srv import String 
 from mrs_msgs.msg import PositionCommand
+from mavros_msgs.msg import State
+from mavros_msgs.srv import CommandBool
 
 
 from ger_drone.msg import Identifier
 from ger_drone.srv import GetObject
 
-
+armado = True
 
 check = False
 
 rospy.init_node('fase1')
 
 def pousar():
-   print('P')
-   rospy.wait_for_service('/uav1/uav_manager/land')
-   um = rospy.ServiceProxy('/uav1/uav_manager/land', Trigger)
-   reqa = Trigger._request_class()
-   um(reqa)
+    while armado == False:
+        pass
+    print('P')
+
+    rospy.wait_for_service('/uav1/uav_manager/land')
+    um = rospy.ServiceProxy('/uav1/uav_manager/land', Trigger)
+    reqa = Trigger._request_class()
+    um(reqa)
    
 
 def decolar():
+    while armado == False:
+        pass
     print('D')
+
     rospy.wait_for_service('/uav1/uav_manager/takeoff')
     dois = rospy.ServiceProxy('/uav1/uav_manager/takeoff', Trigger)
     reqb = Trigger._request_class()
     dois(reqb)
 
+    
+
 def rotina():
     pousar()
-    rospy.sleep(10)
+    rospy.sleep(15)
     decolar()
     rospy.sleep(10)
     
 
 def voar(a):
+    while armado == False:
+        pass
+
     print(a)
     rospy.wait_for_service('/uav1/control_manager/reference')
     tres = rospy.ServiceProxy('/uav1/control_manager/reference',ReferenceStampedSrv)
@@ -116,7 +129,25 @@ def getPose(lista):
         rotina()
 
 
+def armaDrone(msg):
+    global armado
+    if msg.armed == False:
+        armado = False
+        rospy.wait_for_service('/uav1/mavros/cmd/arming')
+        proxy = rospy.ServiceProxy('/uav1/mavros/cmd/arming', CommandBool)
+        req = CommandBool._request_class()
+        
+        req.value = True
+
+        proxy(req)
+
+        decolar()
+
+    else:
+        armado = True
+
 if __name__ == '__main__':
+    rospy.Subscriber('/uav1/mavros/state', State, armaDrone)
     try:
         
         velocidade()

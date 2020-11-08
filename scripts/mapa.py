@@ -15,6 +15,12 @@ from ger_drone.srv import GetObject, GetObjectResponse
 
 import csv
 
+
+num = 1.0
+nBase = 5
+nSensor = 5
+nIteracao = 10
+
 # Lista de bases inicialmente vazia
 objetos = []
 
@@ -25,17 +31,23 @@ muitoRapido = True
 
 indiceMaximo = -1
 
-num = 1.0
 
 tCameraDrone = [0.050, 0.0, -0.093]
 RCameraDrone = [0.707, -0.707, 0.0, -0.0]
+
 RCameraDrone = Rotation.from_quat(RCameraDrone).as_dcm()
+
+
 
 # Cria e insere objeto da mensagem na lista
 def recebeObjeto(msg):
 
+    if atualizaMapa == False:
+        return
+
     if(muitoRapido == True):
         return
+        pass
 
     # Posicao do obj nas coordenadas da camera
     tObjCamera = np.asarray([msg.pose.position.x, msg.pose.position.y, msg.pose.position.z])
@@ -51,59 +63,20 @@ def recebeObjeto(msg):
 
     #rospy.loginfo("Pose: "+str(tObjWorld[0])+" "+str(tObjWorld[1])+" "+str(tObjWorld[2]))
 
-    if(np.linalg.norm(tObjWorld[:2] - tDroneWorld[:2]) > 1):
+    if(np.linalg.norm(tObjWorld[:2] - tDroneWorld[:2]) > 1.2):
         return
+        pass
 
     if(tObjWorld[0] > 6.5 or tObjWorld[0] < -0.45):
         return
-    if(tObjWorld[1] <-6.8 or tObjWorld[1] > 0.75):
+    if(tObjWorld[1] <-6.8 or tObjWorld[1] > 0.5):
         return
     
     if(tObjWorld[0]<1 and tObjWorld[1] > -1.5):
         return
 
-    
-    existe = False
 
 
-    
-    # Verifica se um objeto com indice -1 e o mesmo que outro objeto que ja esta na lista
-    if(msg.identifier.index.data == -1):
-        # comparar a pose se esta proxima (intervalo)
-
-
-        for i in objetos:
-            
-            
-            if (i.identifier.type.data == msg.identifier.type.data):
-
-                pose = np.array([i.pose.position.x,i.pose.position.y])
-
-                if(i.identifier.type.data == Identifier.TYPE_SENSOR_VERDE or i.identifier.type.data == Identifier.TYPE_SENSOR_VERMELHO ):
-                    #rospy.logwarn(str(i.pose.position.x - tObjWorld[0]))
-                    if (np.linalg.norm(pose-tObjWorld[:2]) < 0.1 ):
-                        '''i.pose.position.x += tObjWorld[0]
-                        i.pose.position.y += tObjWorld[1]
-
-                        i.pose.position.x /= 2
-                        i.pose.position.y /= 2'''
-
-                        existe = True
-                else: 
-                    if (np.linalg.norm(pose-tObjWorld[:2]) < 1 ):
-                        '''i.pose.position.x += tObjWorld[0]
-                        i.pose.position.y += tObjWorld[1]
-
-                        i.pose.position.x /= 2
-                        i.pose.position.y /= 2'''
-                        
-                        existe = True
-                #if(existe == True):
-                    #rospy.logwarn(str(np.linalg.norm(pose-tObjWorld[:2])))
-
-    #if(existe == True):
-    #    return
-    
     # Se objeto retornar com indice != -1, verificar se o tipo bate com o objeto ja na lista, e atualizar o estado
     if(msg.identifier.index.data != -1):
         for i in objetos:
@@ -111,6 +84,7 @@ def recebeObjeto(msg):
                 if(i.identifier.type.data == msg.identifier.type.data):
                     i.identifier.state.data = msg.identifier.state.data
                 return
+
 
     r = Rotation.from_dcm(RObjWorld)
     quat = r.as_quat()
@@ -122,7 +96,7 @@ def recebeObjeto(msg):
 
     novoObjeto = Object()
     
-    rospy.loginfo('Objeto armazenado.')
+    #rospy.loginfo('Objeto armazenado.')
     
     #tipo do objeto
     novoObjeto.identifier.type.data = msg.identifier.type.data
@@ -141,7 +115,7 @@ def recebeObjeto(msg):
     novoObjeto.pose.orientation.z = quat[2]
     novoObjeto.pose.orientation.w = quat[3]
 
-    #novoObjeto.data = msg.data
+    novoObjeto.identifier.data = msg.identifier.data
 
     objetos.append(novoObjeto)
     #logObjetos()
@@ -157,7 +131,7 @@ def recebeOdometria(msg):
     r = Rotation.from_quat([msg.pose.orientation.x, msg.pose.orientation.y,msg.pose.orientation.z,msg.pose.orientation.w])
     RDroneWorld = r.as_dcm()
 
-    if((abs(msg.velocity.linear.x) > 0.05 or abs(msg.velocity.linear.y) > 0.05) or
+    if((abs(msg.velocity.linear.x) > 0.08 or abs(msg.velocity.linear.y) > 0.08) or
         (abs(msg.acceleration.linear.x) > 0.5 or abs(msg.acceleration.linear.y) > 0.5)):
         muitoRapido = True
     else:
@@ -174,8 +148,141 @@ def logObjetos():
 
     rospy.loginfo(log)
 
+def afinaLista():
+    global objetos, atualizaMapa
+
+    atualizaMapa = False
+
+    rospy.loginfo("Refinando lista de objetos")
+
+    novaLista = []
+
+    bases = []
+    sensores = []
+
+    for i in range(len(objetos)):
+        if objetos[i].identifier.type.data == Identifier.TYPE_BASE:
+            bases.append(objetos[i])
+        elif (objetos[i].identifier.type.data == Identifier.TYPE_SENSOR_VERDE or 
+        objetos[i].identifier.type.data == Identifier.TYPE_SENSOR_VERMELHO):
+            sensores.append(objetos[i])
+
+    if len(bases) != 0:
+
+        for i in range(nBase):
+            if len(bases) == 0:
+                break
+
+            nInlierMelhor = 0
+            melhor = 0
+            poseMediaMelhor = [0,0]
+
+            for j in range(nIteracao):
+                index = int(np.random.rand(1)[0]*len(bases))
+                
+
+                pose = np.array([bases[index].pose.position.x,bases[index].pose.position.y])
+                nInlier =0
+                poseMedia = [0,0]
+
+                for k in range(len(bases)):
+                    poseTeste = np.array([bases[k].pose.position.x,bases[k].pose.position.y])
+                    if(np.linalg.norm(pose-poseTeste) < 1.0):
+                        nInlier += 1
+                        poseMedia[0] += poseTeste[0]
+                        poseMedia[1] += poseTeste[1]
+
+                if(nInlier > nInlierMelhor):
+                    nInlierMelhor = nInlier
+                    melhor = index
+
+                    poseMediaMelhor[0] = poseMedia[0] / nInlier
+                    poseMediaMelhor[1] = poseMedia[1] / nInlier
+
+
+            pose = np.array([bases[melhor].pose.position.x,bases[melhor].pose.position.y])
+            
+            bases[melhor].pose.position.x = poseMediaMelhor[0]
+            bases[melhor].pose.position.y = poseMediaMelhor[1]
+
+            novaLista.append(bases[melhor])
+            
+            k = 0
+
+            while(k < len(bases)):
+                poseTeste = np.array([bases[k].pose.position.x,bases[k].pose.position.y])
+                if(np.linalg.norm(pose- poseTeste) < 1.0):
+                    del bases[k]
+                else:
+                    k += 1
+
+    if len(sensores) != 0:
+
+        for i in range(nSensor):
+            if len(sensores) == 0:
+                break
+
+            nInlierMelhor = 0
+            melhor = 0
+            poseMediaMelhor = [0,0]
+
+            for j in range(nIteracao):
+                index = int(np.random.rand(1)[0]*len(sensores))
+                
+
+                pose = np.array([sensores[index].pose.position.x,sensores[index].pose.position.y])
+                nInlier =0
+                poseMedia = [0,0]
+
+                for k in range(len(sensores)):
+                    if (sensores[k].identifier.type.data != sensores[index].identifier.type.data):
+                        continue
+                    poseTeste = np.array([sensores[k].pose.position.x,sensores[k].pose.position.y])
+                    if(np.linalg.norm(pose-poseTeste) < 0.1):
+                        nInlier += 1
+                        poseMedia[0] += poseTeste[0]
+                        poseMedia[1] += poseTeste[1]
+
+                if(nInlier > nInlierMelhor):
+                    nInlierMelhor = nInlier
+                    melhor = index
+
+                    poseMediaMelhor[0] = poseMedia[0] / nInlier
+                    poseMediaMelhor[1] = poseMedia[1] / nInlier
+
+
+            pose = np.array([sensores[melhor].pose.position.x,sensores[melhor].pose.position.y])
+            
+            sensores[melhor].pose.position.x = poseMediaMelhor[0]
+            sensores[melhor].pose.position.y = poseMediaMelhor[1]
+
+            tipo = sensores[melhor].identifier.type.data
+
+            novaLista.append(sensores[melhor])
+            
+            k = 0
+
+            while(k < len(sensores)):
+                if (tipo != sensores[k].identifier.type.data):
+                    k+=1
+                    continue
+                poseTeste = np.array([sensores[k].pose.position.x,sensores[k].pose.position.y])
+                if(np.linalg.norm(pose- poseTeste) < 0.1):
+                    del sensores[k]
+                else:
+                    k += 1
+
+    objetos = novaLista
+    
+    imprimeMapa()
+
+
+
+
 # Handler da funcao retorna servico GetObject
 def entregaListaObjetos(req):
+
+    afinaLista()
 
     lista = [] #Lista com objetos que atendem o pedido
 
@@ -192,7 +299,7 @@ def entregaListaObjetos(req):
 def gerarArquivo():
     # Gera um arquivo com todos os objetos na lista.
     # Atencao! tudo que ouver no arquivo "mapa_gerado" sera substituido.
-    
+    rospy.loginfo("Gerando arquivo")
     with open(path, 'w') as arquivo:
         writer = csv.writer(arquivo, delimiter=',')
 
@@ -213,7 +320,7 @@ def geraLinhaCSV(objeto):
             str(objeto.pose.orientation.y ),
             str(objeto.pose.orientation.z ),
             str(objeto.pose.orientation.w  ),
-            objeto.data]
+            str(objeto.identifier.data)]
     
     return row
 
@@ -249,7 +356,7 @@ def recuperaArquivo():
                 novoObjeto.pose.orientation.y = float(row[7])
                 novoObjeto.pose.orientation.z = float(row[8])
                 novoObjeto.pose.orientation.w = float(row[9])
-                novoObjeto.data = row[10]
+                novoObjeto.identifier.data = row[10]
 
                 # Adiciona o objeto na lista global "objetos"
                 objetos.append(novoObjeto)
@@ -261,7 +368,7 @@ def recuperaArquivo():
 
 def imprimeMapa():
 
-    global imgMapa
+    global imgMapa, atualizaMapa
 
     imgMapa = np.ones((800,800,3),np.uint8)*255
 
@@ -287,7 +394,7 @@ def imprimeMapa():
         posicao[0] = (obj.pose.position.x *100)+50
         posicao[1] = (-obj.pose.position.y*100)+50
 
-        cv.circle(imgMapa, (int(posicao[0]),int(posicao[1])), 10, (cor[0],cor[1],cor[2]), -1)
+        cv.circle(imgMapa, (int(posicao[0]),int(posicao[1])), 5, (cor[0],cor[1],cor[2]), -1)
 
 if __name__ == '__main__':
     try:
@@ -298,6 +405,8 @@ if __name__ == '__main__':
         escreve = False
         le = False
         imprime = False
+
+        atualizaMapa = True
         
         try:
             escreve = rospy.get_param("~escrever")
@@ -352,12 +461,13 @@ if __name__ == '__main__':
             # Espera o tempo para executar o programa na frequencia definida
             rate.sleep()
 
-        if(escreve == True):
-            gerarArquivo()
-
+        #if(escreve == True):
+        #    gerarArquivo()
+        gerarArquivo()
         cv.destroyAllWindows()
     except rospy.ROSInternalException:
-        if(escreve == True):
-            gerarArquivo()
+        #if(escreve == True):
+            #gerarArquivo()
+        gerarArquivo()
         cv.destroyAllWindows()
         pass

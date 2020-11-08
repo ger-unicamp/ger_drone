@@ -22,8 +22,10 @@ pontoReal = np.array([[2.5e-2, -2.5e-2, 0],
                     [-2.5e-2, 2.5e-2, 0],
                     [-2.5e-2, -2.5e-2, 0]], dtype=np.float32)
 
+
+
 def converteImagem(img):
-    return CvBridge().imgmsg_to_cv2(img)
+    return CvBridge().imgmsg_to_cv2(img, "bgr8")
 
 
 def inverteTransformacao(R, t):
@@ -39,6 +41,8 @@ def procuraQuadrado(mascara):
     
     contours = []
     hierarchy = []
+
+    bordas = cv.Canny(mascara, 100, 500, kernel)
 
     try:
         contours,hierarchy = cv.findContours(bordas, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE)
@@ -134,10 +138,8 @@ def publicaSensor(R, t, cor):
 
     if cor == True:
         msg.identifier.type.data = msg.identifier.TYPE_SENSOR_VERDE
-        rospy.loginfo("VERDE")
     else:
         msg.identifier.type.data = msg.identifier.TYPE_SENSOR_VERMELHO
-        rospy.loginfor("VERMELHO")
     
 
     msg.identifier.state.data = msg.identifier.STATE_DESCONHECIDO
@@ -189,7 +191,6 @@ if __name__ == '__main__':
     
 
         while not rospy.is_shutdown():
-
             rate.sleep() #Espera o tempo para executar o programa na frequencia definida
 
     except rospy.ROSInternalException:

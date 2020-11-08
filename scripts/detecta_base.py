@@ -23,6 +23,16 @@ pontoReal = np.array([[0.5,-0.5,0],
                     [-0.5,0.5,0],
                     [-0.5,-0.5,0]], dtype=np.float32)
 
+
+imgDraw = np.zeros((3,3,1))
+
+def imprimeTodosQuadrados(quadrados, img):
+    global imgDraw
+    imgDraw = img.copy()
+    for quad in quadrados:
+        for point in quad:
+            cv.circle(imgDraw, (point[0], point[1]), 5, (255,0,255), -1)
+
 def converteImagem(img):
     return CvBridge().imgmsg_to_cv2(img, "bgr8")
 
@@ -163,6 +173,7 @@ def recebeImagem(msg):
 
     if(len(quadrados) != 0):
         rospy.loginfo("Bases encontradas: "+str(len(quadrados)))
+        #imprimeTodosQuadrados(quadrados, img)
 
     for pontoImagem in quadrados:
 
@@ -217,6 +228,10 @@ if __name__ == '__main__':
     
 
         while not rospy.is_shutdown():
+
+            #cv.imshow("Detector", imgDraw)
+            #cv.waitKey(1)
+
 
             rate.sleep() #Espera o tempo para executar o programa na frequencia definida
 
