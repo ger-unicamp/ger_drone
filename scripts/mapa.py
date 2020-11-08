@@ -21,6 +21,7 @@ objetos = []
 # Vetor de posicoes para calculo de coordenadas
 tDroneWorld = np.asarray([0,0,0])
 RDroneWorld = np.asarray([[1,0,0],[0,1,0],[0,0,1]])
+muitoRapido = True
 
 indiceMaximo = -1
 
@@ -32,6 +33,9 @@ RCameraDrone = Rotation.from_quat(RCameraDrone).as_dcm()
 
 # Cria e insere objeto da mensagem na lista
 def recebeObjeto(msg):
+
+    if(muitoRapido == True):
+        return
 
     # Posicao do obj nas coordenadas da camera
     tObjCamera = np.asarray([msg.pose.position.x, msg.pose.position.y, msg.pose.position.z])
@@ -47,35 +51,59 @@ def recebeObjeto(msg):
 
     #rospy.loginfo("Pose: "+str(tObjWorld[0])+" "+str(tObjWorld[1])+" "+str(tObjWorld[2]))
 
-    if(tObjWorld[0] > 6.5 or tObjWorld[0] < -0.45):
-        return
-    if(tObjWorld[1] <-6.5 or tObjWorld[1] > 0.75):
-        return
-    
-    if(tObjWorld[0]<1 and tObjWorld[1] < -1.5):
+    if(np.linalg.norm(tObjWorld[:2] - tDroneWorld[:2]) > 1):
         return
 
+    if(tObjWorld[0] > 6.5 or tObjWorld[0] < -0.45):
+        return
+    if(tObjWorld[1] <-6.8 or tObjWorld[1] > 0.75):
+        return
+    
+    if(tObjWorld[0]<1 and tObjWorld[1] > -1.5):
+        return
+
+    
+    existe = False
+
+
+    
     # Verifica se um objeto com indice -1 e o mesmo que outro objeto que ja esta na lista
     if(msg.identifier.index.data == -1):
         # comparar a pose se esta proxima (intervalo)
-        # @todo distancia euclidiana numpy.linalg.norm
+
+
         for i in objetos:
-            pose = np.array([i.pose.position.x,i.pose.position.y])
+            
+            
             if (i.identifier.type.data == msg.identifier.type.data):
+
+                pose = np.array([i.pose.position.x,i.pose.position.y])
+
                 if(i.identifier.type.data == Identifier.TYPE_SENSOR_VERDE or i.identifier.type.data == Identifier.TYPE_SENSOR_VERMELHO ):
                     #rospy.logwarn(str(i.pose.position.x - tObjWorld[0]))
                     if (np.linalg.norm(pose-tObjWorld[:2]) < 0.1 ):
-                            i.pose.position.x += tObjWorld[0]
-                            i.pose.position.y += tObjWorld[1]
+                        '''i.pose.position.x += tObjWorld[0]
+                        i.pose.position.y += tObjWorld[1]
 
-                            i.pose.position.x /= 2
-                            i.pose.position.y /= 2
+                        i.pose.position.x /= 2
+                        i.pose.position.y /= 2'''
 
-                            return
+                        existe = True
                 else: 
-                    if (np.linalg.norm(pose-tObjWorld[:2]) < num ):
-                        return
+                    if (np.linalg.norm(pose-tObjWorld[:2]) < 1 ):
+                        '''i.pose.position.x += tObjWorld[0]
+                        i.pose.position.y += tObjWorld[1]
 
+                        i.pose.position.x /= 2
+                        i.pose.position.y /= 2'''
+                        
+                        existe = True
+                #if(existe == True):
+                    #rospy.logwarn(str(np.linalg.norm(pose-tObjWorld[:2])))
+
+    #if(existe == True):
+    #    return
+    
     # Se objeto retornar com indice != -1, verificar se o tipo bate com o objeto ja na lista, e atualizar o estado
     if(msg.identifier.index.data != -1):
         for i in objetos:
@@ -116,13 +144,11 @@ def recebeObjeto(msg):
     #novoObjeto.data = msg.data
 
     objetos.append(novoObjeto)
-    logObjetos()
+    #logObjetos()
 
-    if imprime == True:
-        imprimeMapa(tObjWorld, novoObjeto.identifier.type.data)
 
 def recebeOdometria(msg):
-    global tDroneWorld, RDroneWorld
+    global tDroneWorld, RDroneWorld, muitoRapido
 
     tDroneWorld[0] = msg.pose.position.x
     tDroneWorld[1] = msg.pose.position.y
@@ -130,6 +156,12 @@ def recebeOdometria(msg):
 
     r = Rotation.from_quat([msg.pose.orientation.x, msg.pose.orientation.y,msg.pose.orientation.z,msg.pose.orientation.w])
     RDroneWorld = r.as_dcm()
+
+    if((abs(msg.velocity.linear.x) > 0.05 or abs(msg.velocity.linear.y) > 0.05) or
+        (abs(msg.acceleration.linear.x) > 0.5 or abs(msg.acceleration.linear.y) > 0.5)):
+        muitoRapido = True
+    else:
+        muitoRapido = False
 
 def logObjetos():
     log = str(len(objetos))
@@ -227,21 +259,35 @@ def recuperaArquivo():
         rospy.logwarn("Nao foi possivel ler o arquivo")
         return
 
-def imprimeMapa(posicao, tipo):
+def imprimeMapa():
 
-    cor = [0,0,0]
+    global imgMapa
 
-    if(tipo == Identifier.TYPE_SENSOR_VERDE):
-        cor[1] = 255
-    elif(tipo == Identifier.TYPE_SENSOR_VERMELHO):
-        cor[2] = 255
-    elif(tipo == Identifier.TYPE_BASE):
-        cor[0] = 255
+    imgMapa = np.ones((800,800,3),np.uint8)*255
 
-    posicao[0] = (posicao[0]*100)+50
-    posicao[1] = (-posicao[1]*100)+50
+    for obj in objetos:
 
-    cv.circle(imgMapa, (int(posicao[0]),int(posicao[1])), 10, (cor[0],cor[1],cor[2]), -1)
+        cor = [0,0,0]
+
+        posicao = [0, 0]
+
+        if(obj.identifier.type.data == Identifier.TYPE_SENSOR_VERDE):
+            cor[1] = 255
+        elif(obj.identifier.type.data == Identifier.TYPE_SENSOR_VERMELHO):
+            cor[2] = 255
+        elif(obj.identifier.type.data == Identifier.TYPE_BASE):
+            cor[0] = 255
+
+
+        if obj.identifier.state.data == Identifier.STATE_PROCESSADO:
+            cor[0] /= 2
+            cor[1] /= 2
+            cor[2] /= 2
+
+        posicao[0] = (obj.pose.position.x *100)+50
+        posicao[1] = (-obj.pose.position.y*100)+50
+
+        cv.circle(imgMapa, (int(posicao[0]),int(posicao[1])), 10, (cor[0],cor[1],cor[2]), -1)
 
 if __name__ == '__main__':
     try:
@@ -282,8 +328,7 @@ if __name__ == '__main__':
             recuperaArquivo()
 
         if imprime == True:
-            imgMapa = np.ones((800,800,3),np.uint8)*255
-            imprimeMapa([0,0], -1)
+            imprimeMapa()
 
         # Subscriber para receber objeto por mensagem
         rospy.Subscriber('objeto_detectado', Object, recebeObjeto)
@@ -301,6 +346,7 @@ if __name__ == '__main__':
         # Checa por mensagem ou servico
         while not rospy.is_shutdown():
             if imprime == True:
+                imprimeMapa()
                 cv.imshow("Mapa", imgMapa)
                 cv.waitKey(1)
             # Espera o tempo para executar o programa na frequencia definida

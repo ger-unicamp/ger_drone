@@ -37,9 +37,9 @@ def decolar():
 
 def rotina():
     pousar()
-    rospy.sleep(12)
+    rospy.sleep(10)
     decolar()
-    rospy.sleep(12)
+    rospy.sleep(10)
     
 
 def voar(a):
@@ -65,7 +65,7 @@ def velocidade():
     rospy.wait_for_service('/uav1/constraint_manager/set_constraints')
     quatro = rospy.ServiceProxy('/uav1/constraint_manager/set_constraints',String)
     reqd = String._request_class()
-    reqd.value = 'slow'
+    reqd.value = 'fast'
         
     quatro(reqd)
 
@@ -106,8 +106,9 @@ def getPose(lista):
     listaPoses = []
     for i in lista:
         a = [i.pose.position.x, i.pose.position.y, i.pose.position.z]
+        a = [i.pose.position.x, i.pose.position.y, 3]
         listaPoses.append(a)
-    
+    print(listaPoses)
     for j in listaPoses:
         print(j)
         voar(j)
@@ -120,16 +121,17 @@ if __name__ == '__main__':
         
         velocidade()
         #pontos = [[6,2,2.5],[4,2,2.5],[2,2,2.5],[2,3.5,2.5],[4,3.5,2],[6,3.5,2],[7.5,3.5,2],[7.5,5,2],[6,5,2],[4,5,2],[2,5,2],[2,7.5,2],[4,7.5,2],[6,7.5,2],[7.5,7.5,2],[8.1,2,2]]
-        pontos = [[2,0,3],[4,0,3], [6,0,3],[6,-1.5,3] ,[4,-1.5,3] ,[2,-1.5,3],[0,-1.5,3],[0,-3,3], [2,-3,3], [4,-3,3], [6,-3,3],[6,-4.5,3], [4,-4.5,3], [2,-4.5,3],[0,-4.5,3],[0,-6,3],[2,-6,3], [4,-6,3], [6,-6,3]]
+        #pontos = [[2,0,3],[4,0,3], [6,0,3],[6,-1.5,3] ,[4,-1.5,3] ,[2,-1.5,3],[0,-1.5,3],[0,-3,3], [2,-3,3], [4,-3,3], [6,-3,3],[6,-4.5,3], [4,-4.5,3], [2,-4.5,3],[0,-4.5,3],[0,-6,3],[2,-6,3], [4,-6,3], [6,-6,3]]
+        pontos = [[2,0,3],[4,0,3], [6,0,3],[6,-1.2,3] ,[4,-1.2,3] ,[2,-1.2,3],[0,-1.2,3],[0,-2.4,3], [2,-2.4,3], [4,-2.4,3], [6,-2.4,3],[6,-3.6,3], [4,-3.6,3], [2,-3.6,3],[0,-3.6,3],[0,-4.8,3],[2,-4.8,3], [4,-4.8,3], [6,-4.8,3],[6,-6,3],[4,-6,3],[2,-6,3],[0,-6,3]]
         #decolar()
 
         #rospy.sleep(8)
 
         for i in pontos:
             voar(i)
-            rospy.sleep(2)
+            rospy.sleep(1)
         
-        rospy.sleep(4)
+        rospy.sleep(2)
     
         
 

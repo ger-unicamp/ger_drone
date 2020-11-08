@@ -81,7 +81,7 @@ if __name__ == '__main__':
         velocidade()
         decolar()
         rospy.sleep(8)
-        # eq do caminho y = -4.97143x +29.708   entre x = 5.6 e x =4.4
+        # eq do caminho y = -5.25x + 13.9125   entre x = 2.65 e x =3.85
         partida = [2.5,0.2,0.8]
         voar(partida)
         rospy.sleep(4)

@@ -24,12 +24,12 @@ if __name__ == '__main__':
         rospy.sleep(10)
         
 
-        
+        '''
         rospy.wait_for_service('/uav1/uav_manager/land')
         oi = rospy.ServiceProxy('/uav1/uav_manager/land', Trigger)
         reqq = Trigger._request_class()
         oi(reqq)
-        
+        '''
 
     except rospy.ROSInternalException:
         pass    
