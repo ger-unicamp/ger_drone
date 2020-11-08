@@ -60,15 +60,13 @@ def recebeImagem(msg):
             pontoImagem.append([qr.polygon[i][0],qr.polygon[i][1]])
         pontoImagem = np.array(pontoImagem, dtype=np.float32)
 
-        a, RObj, tObj, _ = cv.solvePnPRansac(pontoReal,pontoImagem , K, np.zeros((5,1)))
+        a, RCamObj, tCamObj, _ = cv.solvePnPRansac(pontoReal,pontoImagem , K, np.zeros((5,1)))
 
-        tObj = tObj.ravel()
+        tCamObj = tCamObj.ravel()
 
-        RObj, _ = cv.Rodrigues(RObj)
+        RCamObj, _ = cv.Rodrigues(RCamObj)
 
-        RObjCamera, tObjCamera = inverteTransformacao(RObj, tObj)
-
-        publicaCubo(RObjCamera, tObjCamera, letra)
+        publicaCubo(RCamObj, tCamObj, letra)
 
 def publicaCubo(R, t, letra):
     msg = Object()

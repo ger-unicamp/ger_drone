@@ -24,7 +24,7 @@ RDroneWorld = np.asarray([[1,0,0],[0,1,0],[0,0,1]])
 
 indiceMaximo = -1
 
-num = 1
+num = 1.0
 
 tCameraDrone = [0.050, 0.0, -0.093]
 RCameraDrone = [0.707, -0.707, 0.0, -0.0]
@@ -45,9 +45,14 @@ def recebeObjeto(msg):
     RObjWorld = np.matmul(RDroneWorld, RObjDrone) 
     tObjWorld = tDroneWorld + np.matmul(RDroneWorld, tObjDrone)
 
-    if(tObjWorld[0] > 8 or tObjWorld[0] < 0):
+    #rospy.loginfo("Pose: "+str(tObjWorld[0])+" "+str(tObjWorld[1])+" "+str(tObjWorld[2]))
+
+    if(tObjWorld[0] > 6.5 or tObjWorld[0] < -0.45):
         return
-    if(tObjWorld[1] <-8 or tObjWorld[1] > 0):
+    if(tObjWorld[1] <-6.5 or tObjWorld[1] > 0.75):
+        return
+    
+    if(tObjWorld[0]<1 and tObjWorld[1] < -1.5):
         return
 
     # Verifica se um objeto com indice -1 e o mesmo que outro objeto que ja esta na lista
@@ -55,11 +60,11 @@ def recebeObjeto(msg):
         # comparar a pose se esta proxima (intervalo)
         # @todo distancia euclidiana numpy.linalg.norm
         for i in objetos:
+            pose = np.array([i.pose.position.x,i.pose.position.y])
             if (i.identifier.type.data == msg.identifier.type.data):
                 if(i.identifier.type.data == Identifier.TYPE_SENSOR_VERDE or i.identifier.type.data == Identifier.TYPE_SENSOR_VERMELHO ):
                     #rospy.logwarn(str(i.pose.position.x - tObjWorld[0]))
-                    if (abs(i.pose.position.x - tObjWorld[0]) < 0.1 and 
-                        abs(i.pose.position.y - tObjWorld[1]) < 0.1):
+                    if (np.linalg.norm(pose-tObjWorld[:2]) < 0.1 ):
                             i.pose.position.x += tObjWorld[0]
                             i.pose.position.y += tObjWorld[1]
 
@@ -68,9 +73,7 @@ def recebeObjeto(msg):
 
                             return
                 else: 
-                    if (abs(i.pose.position.x - tObjWorld[0]) < num and 
-                    abs(i.pose.position.y - tObjWorld[1]) < num and 
-                    abs(i.pose.position.z - tObjWorld[2]) < num):
+                    if (np.linalg.norm(pose-tObjWorld[:2]) < num ):
                         return
 
     # Se objeto retornar com indice != -1, verificar se o tipo bate com o objeto ja na lista, e atualizar o estado
@@ -113,7 +116,7 @@ def recebeObjeto(msg):
     #novoObjeto.data = msg.data
 
     objetos.append(novoObjeto)
-    #logObjetos()
+    logObjetos()
 
     if imprime == True:
         imprimeMapa(tObjWorld, novoObjeto.identifier.type.data)
@@ -232,9 +235,11 @@ def imprimeMapa(posicao, tipo):
         cor[1] = 255
     elif(tipo == Identifier.TYPE_SENSOR_VERMELHO):
         cor[2] = 255
+    elif(tipo == Identifier.TYPE_BASE):
+        cor[0] = 255
 
-    posicao[0] = posicao[0]*100
-    posicao[1] = -posicao[1]*100
+    posicao[0] = (posicao[0]*100)+50
+    posicao[1] = (-posicao[1]*100)+50
 
     cv.circle(imgMapa, (int(posicao[0]),int(posicao[1])), 10, (cor[0],cor[1],cor[2]), -1)
 
@@ -265,6 +270,7 @@ if __name__ == '__main__':
 
         rospy.loginfo("Escrita de arquivo definido para: "+str(escreve))
         rospy.loginfo("Leitura de arquivo definido para: "+str(le))
+        rospy.loginfo("Impressao definida para: "+str(imprime))
 
         path = rospkg.RosPack().get_path('ger_drone')
 

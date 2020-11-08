@@ -2,17 +2,18 @@
     Inicializa APENAS os nos relacionados a primeira fase 
 -->
 <launch>
-    <node name="detecta_base" pkg="ger_drone"  type="detecta_base.py" ns="/ger_drone" output="screen">
+    <node name="detecta_base" pkg="ger_drone"  type="detecta_base.py" ns="/ger_drone" >
         <remap from="image_rect_color" to="/uav1/bluefox_optflow/image_rect_color"/>
         <remap from="camera_info" to="/uav1/bluefox_optflow/camera_info"/>
     </node>
 
-    <node name="fase1" pkg="ger_drone" type="fase1.py" ns="/ger_drone" />
+    <node name="fase1" pkg="ger_drone" type="fase1.py" ns="/ger_drone" output="screen"/>
 
     <node name="mapa" pkg="ger_drone"  type="mapa.py" ns="/ger_drone" output="screen">
         <remap from="uav_state" to="/uav1/odometry/uav_state" />
         <param name="escrever" value="true"/>
         <param name="ler" value="false"/>
+        <param name="imprimir" value="true"/>
     </node>
 
 </launch>
