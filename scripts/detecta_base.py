@@ -166,7 +166,7 @@ def recebeImagem(msg):
 
     for pontoImagem in quadrados:
 
-        ponto = np.array(pontoImagem, dtype=np.float32)
+
 
         a, RCamObj, tCamObj, _ = cv.solvePnPRansac(pontoReal,pontoImagem , K, np.zeros((5,1)))
 

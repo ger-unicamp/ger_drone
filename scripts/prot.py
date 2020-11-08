@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 
-
 import rospy
 from std_srvs.srv import Trigger
 from mrs_msgs.srv import Vec4
@@ -18,7 +17,7 @@ from ger_drone.srv import GetObject
 
 check = False
 
-rospy.init_node('fase1')
+rospy.init_node('caminho')
 
 def pousar():
    print('P')
@@ -43,7 +42,6 @@ def rotina():
     
 
 def voar(a):
-    print(a)
     rospy.wait_for_service('/uav1/control_manager/reference')
     tres = rospy.ServiceProxy('/uav1/control_manager/reference',ReferenceStampedSrv)
     
@@ -65,7 +63,7 @@ def velocidade():
     rospy.wait_for_service('/uav1/constraint_manager/set_constraints')
     quatro = rospy.ServiceProxy('/uav1/constraint_manager/set_constraints',String)
     reqd = String._request_class()
-    reqd.value = 'slow'
+    reqd.value = 'fast'
         
     quatro(reqd)
 
@@ -82,7 +80,7 @@ def compara(msg,w):
     posx = msg.position.x
     posy = msg.position.y
     posz = msg.position.z
-    if (posx < w[0] + 0.01 and posx > w[0] - 0.01) and (posy < w[1] + 0.01 and posy > w[1] - 0.01):
+    if (posx < w[0] + 0.1 and posx > w[0] - 0.1) and (posy < w[1] + 0.1 and posy > w[1] - 0.1):
         print('pronto')
         check = True
     else:
@@ -111,23 +109,22 @@ def getPose(lista):
     for j in listaPoses:
         print(j)
         voar(j)
-        rospy.sleep(4)
+        rospy.sleep(2)
         rotina()
 
 
 if __name__ == '__main__':
     try:
-        
         velocidade()
-        #pontos = [[6,2,2.5],[4,2,2.5],[2,2,2.5],[2,3.5,2.5],[4,3.5,2],[6,3.5,2],[7.5,3.5,2],[7.5,5,2],[6,5,2],[4,5,2],[2,5,2],[2,7.5,2],[4,7.5,2],[6,7.5,2],[7.5,7.5,2],[8.1,2,2]]
-        pontos = [[2,0,3],[4,0,3], [6,0,3],[6,-1.5,3] ,[4,-1.5,3] ,[2,-1.5,3],[0,-1.5,3],[0,-3,3], [2,-3,3], [4,-3,3], [6,-3,3],[6,-4.5,3], [4,-4.5,3], [2,-4.5,3],[0,-4.5,3],[0,-6,3],[2,-6,3], [4,-6,3], [6,-6,3]]
-        #decolar()
+        pontos = [[6,2,2.5],[4,2,2.5],[2,2,2.5],[2,3.5,2.5],[4,3.5,2],[6,3.5,2],[7.5,3.5,2],[7.5,5,2],[6,5,2],[4,5,2],[2,5,2],[2,7.5,2],[4,7.5,2],[6,7.5,2],[7.5,7.5,2],[8.1,2,2]]
+        
+        decolar()
 
-        #rospy.sleep(8)
+        rospy.sleep(8)
 
         for i in pontos:
             voar(i)
-            rospy.sleep(2)
+            rospy.sleep(1)
         
         rospy.sleep(4)
     
@@ -136,8 +133,7 @@ if __name__ == '__main__':
         getListObject()  
         
         #voltar e finalizar
-        #base = [8.1,-2,2.5]
-        base = [0,0,2]
+        base = [8.1,2,2.5]
         voar(base)
         rospy.sleep(2)
         pousar()

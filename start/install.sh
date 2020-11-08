@@ -1,4 +1,4 @@
 #!/bin/bash
 
 pip install numpy scipy pyzbar
-sudo apt-get install python-opencv
+pip install opencv-python==4.2.0.32
