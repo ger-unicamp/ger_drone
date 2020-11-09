@@ -12,6 +12,7 @@ from mrs_msgs.msg import UavState
 from ger_drone.msg import Object, Identifier, ObjectState
 
 from ger_drone.srv import GetObject, GetObjectResponse
+from std_srvs.srv import SetBool, SetBoolResponse
 
 import csv
 
@@ -47,7 +48,7 @@ def recebeObjeto(msg):
 
     if(muitoRapido == True):
         return
-        pass
+        
 
     # Posicao do obj nas coordenadas da camera
     tObjCamera = np.asarray([msg.pose.position.x, msg.pose.position.y, msg.pose.position.z])
@@ -65,7 +66,7 @@ def recebeObjeto(msg):
 
     if(np.linalg.norm(tObjWorld[:2] - tDroneWorld[:2]) > 1.2):
         return
-        pass
+        
 
     if(tObjWorld[0] > 6.5 or tObjWorld[0] < -0.45):
         return
@@ -159,13 +160,20 @@ def afinaLista():
 
     bases = []
     sensores = []
+    cubos = []
 
     for i in range(len(objetos)):
-        if objetos[i].identifier.type.data == Identifier.TYPE_BASE:
+        tipo = objetos[i].identifier.type.data
+
+        if tipo == Identifier.TYPE_BASE:
             bases.append(objetos[i])
-        elif (objetos[i].identifier.type.data == Identifier.TYPE_SENSOR_VERDE or 
-        objetos[i].identifier.type.data == Identifier.TYPE_SENSOR_VERMELHO):
+        elif (tipo == Identifier.TYPE_SENSOR_VERDE or 
+        tipo == Identifier.TYPE_SENSOR_VERMELHO):
             sensores.append(objetos[i])
+        elif (tipo == Identifier.TYPE_PACOTE_A or tipo == Identifier.TYPE_PACOTE_B 
+            or tipo == Identifier.TYPE_PACOTE_C or tipo == Identifier.TYPE_PACOTE_D 
+            or Identifier.TYPE_PACOTE_E):
+            cubos.append(objetos[i])
 
     if len(bases) != 0:
 
@@ -272,6 +280,58 @@ def afinaLista():
                 else:
                     k += 1
 
+    nCubos = len(cubos)
+
+    if nCubos != 0:
+        while True:
+            if len(cubos) == 0:
+                break
+
+            nInlierMelhor = 0
+            melhor = 0
+            poseMediaMelhor = [0,0]
+
+            for j in range(nIteracao):
+                index = int(np.random.rand(1)[0]*len(cubos))
+                
+
+                pose = np.array([cubos[index].pose.position.x,cubos[index].pose.position.y])
+                nInlier =0
+                poseMedia = [0,0]
+
+                for k in range(len(cubos)):
+                    poseTeste = np.array([cubos[k].pose.position.x,cubos[k].pose.position.y])
+                    if(np.linalg.norm(pose-poseTeste) < 1.0):
+                        nInlier += 1
+                        poseMedia[0] += poseTeste[0]
+                        poseMedia[1] += poseTeste[1]
+
+                if(nInlier > nInlierMelhor):
+                    nInlierMelhor = nInlier
+                    melhor = index
+
+                    poseMediaMelhor[0] = poseMedia[0] / nInlier
+                    poseMediaMelhor[1] = poseMedia[1] / nInlier
+
+            if nInlierMelhor < nCubos/3:
+                break
+
+            pose = np.array([cubos[melhor].pose.position.x,cubos[melhor].pose.position.y])
+            
+            cubos[melhor].pose.position.x = poseMediaMelhor[0]
+            cubos[melhor].pose.position.y = poseMediaMelhor[1]
+
+            novaLista.append(cubos[melhor])
+            
+            k = 0
+
+            while(k < len(cubos)):
+                poseTeste = np.array([cubos[k].pose.position.x,cubos[k].pose.position.y])
+                if(np.linalg.norm(pose- poseTeste) < 1.0):
+                    del cubos[k]
+                else:
+                    k += 1
+
     objetos = novaLista
     
     imprimeMapa()
@@ -366,6 +426,17 @@ def recuperaArquivo():
         rospy.logwarn("Nao foi possivel ler o arquivo")
         return
 
+def setAtualizaMapa(req):
+    global atualizaMapa
+    if req.data == True:
+        atualizaMapa = True
+    else:
+        atualizaMapa = False
+
+    resp = SetBoolResponse()
+    resp.success = True
+    resp.message = "Alterado com sucesso"
+
 def imprimeMapa():
 
     global imgMapa, atualizaMapa
@@ -447,6 +518,9 @@ if __name__ == '__main__':
 
         # Servico GetObject para entregar objetos
         rospy.Service('get_object', GetObject, entregaListaObjetos)
+
+        rospy.Service('set_atualiza_mapa', SetBool, setAtualizaMapa)
+
 
         # Define a frequencia de execucao em Hz
         rate = rospy.Rate(10)
