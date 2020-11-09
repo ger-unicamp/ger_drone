@@ -16,9 +16,9 @@ if __name__ == '__main__':
 
         srv = rospy.ServiceProxy('/uav1/control_manager/goto', Vec4)
 ## pontas [4.4,8.2] [5.8,1.8]        ponto de partida:[8.1,1.8,1.5]
-        req.goal[0] = 0  #(2.65 + 1.2)
-        req.goal[1] = 0  #-6.3
-        req.goal[2] = 2.5
+        req.goal[0] = 0 #(2.65 + 1.2)
+        req.goal[1] = 0 #-6.3
+        req.goal[2] = 1.5
         req.goal[3] = 0
         srv(req)
         rospy.sleep(10)

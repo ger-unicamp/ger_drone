@@ -131,8 +131,8 @@ def recebeOdometria(msg):
     r = Rotation.from_quat([msg.pose.orientation.x, msg.pose.orientation.y,msg.pose.orientation.z,msg.pose.orientation.w])
     RDroneWorld = r.as_dcm()
 
-    if((abs(msg.velocity.linear.x) > 0.08 or abs(msg.velocity.linear.y) > 0.08) or
-        (abs(msg.acceleration.linear.x) > 0.5 or abs(msg.acceleration.linear.y) > 0.5)):
+    if((abs(msg.velocity.linear.x) > 0.05 or abs(msg.velocity.linear.y) > 0.05) or
+        (abs(msg.acceleration.linear.x) > 0.4 or abs(msg.acceleration.linear.y) > 0.4)):
         muitoRapido = True
     else:
         muitoRapido = False
@@ -216,9 +216,38 @@ def afinaLista():
                 else:
                     k += 1
 
-    if len(sensores) != 0:
+    nSensor = len(sensores)
+    nSensorEscolhido = 0
 
-        for i in range(nSensor):
+    if nSensor != 0:
+
+        melhorErro = 999999999999
+        pontos = [0,0]
+
+        for i in range(10):
+            index1 = int(np.random.rand(1)[0]*len(sensores))
+            index2 = int(np.random.rand(1)[0]*len(sensores))
+
+            p1 = np.array([sensores[index1].pose.position.x,sensores[index1].pose.position.y])
+            p2 = np.array([sensores[index2].pose.position.x,sensores[index2].pose.position.y])
+
+            erro = 0
+
+            for j in range(len(sensores)):
+                p3 = np.array([sensores[j].pose.position.x,sensores[j].pose.position.y])
+                d = np.linalg.norm(np.cross(p2-p1, p1-p3))/np.linalg.norm(p2-p1)
+
+                erro += d
+
+            if(erro< melhorErro):
+                melhorErro = erro
+                pontos[0] = p1
+                pontos[1] = p2
+            
+
+
+        while True:
+        #for i in range(nSensor):
             if len(sensores) == 0:
                 break
 
@@ -238,7 +267,7 @@ def afinaLista():
                     if (sensores[k].identifier.type.data != sensores[index].identifier.type.data):
                         continue
                     poseTeste = np.array([sensores[k].pose.position.x,sensores[k].pose.position.y])
-                    if(np.linalg.norm(pose-poseTeste) < 0.1):
+                    if(np.linalg.norm(pose-poseTeste) < 0.2):
                         nInlier += 1
                         poseMedia[0] += poseTeste[0]
                         poseMedia[1] += poseTeste[1]
@@ -250,9 +279,22 @@ def afinaLista():
                     poseMediaMelhor[0] = poseMedia[0] / nInlier
                     poseMediaMelhor[1] = poseMedia[1] / nInlier
 
+            if (nSensorEscolhido >= 5) and ((nInlierMelhor / len(sensores)) < 0.3):
+                break
+            
+            nSensorEscolhido += 1
+
 
             pose = np.array([sensores[melhor].pose.position.x,sensores[melhor].pose.position.y])
             
+            dx = pontos[0][0] - pontos[1][0]
+            dy = pontos[0][1] - pontos[1][1]
+            det = (dx*dx) + (dy*dy)
+            a = (dy*(poseMediaMelhor[1]-pontos[0][1])+dx*(poseMediaMelhor[0]-pontos[0][0]))/det
+
+            poseMediaMelhor[0] = (a*dx) + pontos[0][0]
+            poseMediaMelhor[1] = (a*dy) + pontos[0][1]
+
             sensores[melhor].pose.position.x = poseMediaMelhor[0]
             sensores[melhor].pose.position.y = poseMediaMelhor[1]
 
@@ -267,7 +309,7 @@ def afinaLista():
                     k+=1
                     continue
                 poseTeste = np.array([sensores[k].pose.position.x,sensores[k].pose.position.y])
-                if(np.linalg.norm(pose- poseTeste) < 0.1):
+                if(np.linalg.norm(pose- poseTeste) < 0.2):
                     del sensores[k]
                 else:
                     k += 1

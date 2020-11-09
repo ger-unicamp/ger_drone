@@ -7,7 +7,8 @@ from mrs_msgs.srv import ReferenceStampedSrv
 from geometry_msgs.msg import Point
 from mrs_msgs.srv import String 
 from mrs_msgs.msg import PositionCommand
-
+from ger_drone.msg import Identifier
+from ger_drone.srv import GetObject
 
 rospy.init_node('caminho2')
 check = False
@@ -103,8 +104,8 @@ def voarSensor(lista):
 if __name__ == '__main__':
     try:
         velocidade()
-        decolar()
-        rospy.sleep(8)
+        #decolar()
+        #rospy.sleep(8)
         # eq do caminho y = -5.25x + 13.9125   entre x = 2.65 e x =3.85
         partida = [2.5,0.2,0.8]
         voar(partida)
@@ -128,8 +129,7 @@ if __name__ == '__main__':
         for h in poses:
             voar(h)
             rospy.sleep(5)
-
-
+        
         getSensor()
 
         rospy.sleep(5)
@@ -139,6 +139,3 @@ if __name__ == '__main__':
 
     except rospy.ROSInternalException:
         pass    
-
-
-
