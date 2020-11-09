@@ -42,7 +42,7 @@ def voar(a):
     reqc.reference.position.x = x
     reqc.reference.position.y = y
     reqc.reference.position.z = z
-    reqc.reference.heading = 0
+    reqc.reference.heading = 0.2
     tres(reqc)
     checar(lista)
 
@@ -94,7 +94,10 @@ def voarSensor(lista):
     PoseSensores = []
     for i in lista:
         print(i)
-        p = [i.pose.position.x,i.pose.position.y,0.8]
+        if i.pose.position.y < -3.4:
+            p = [(i.pose.position.x)+0.4,i.pose.position.y,0.6]
+        else:
+            p = [i.pose.position.x,i.pose.position.y,0.6]
         PoseSensores.append(p)
     for j in PoseSensores:
         print(j)
@@ -134,9 +137,9 @@ if __name__ == '__main__':
         px =[]
         n = 0
         poses =[]
-        z = 0.4
-        for i in range(0,7):
-            p = 2.65 + n*(1.2/7)
+        z = 0.34
+        for i in range(0,11):
+            p = 2.65 + n*(1.2/11)
             n = n+1
             px.append(p)
         
@@ -147,7 +150,7 @@ if __name__ == '__main__':
 
         for h in poses:
             voar(h)
-            rospy.sleep(5)
+            rospy.sleep(8)
         rospy.sleep(5)
         getSensor()
 
