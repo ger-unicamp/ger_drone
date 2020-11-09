@@ -2,7 +2,7 @@
     Inicializa APENAS os nos relacionados a primeira fase 
 -->
 <launch>
-    <node name="fase2" pkg="ger_drone" type="fase2.py" ns="/ger_drone" />
+    <node name="fase2" pkg="ger_drone" type="fase2.py" ns="/ger_drone" output="screen"/>
     <node name="led" pkg="ger_drone" type="led_simulado.py" ns="/ger_drone"/>
 
     <node name="mapa" pkg="ger_drone"  type="mapa.py" ns="/ger_drone" output="screen">

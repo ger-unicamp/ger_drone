@@ -12,10 +12,10 @@ cor = [0,0,0]
 img = np.ones((500,500,3),np.uint8)*255
 
 def recebeCor(msg):
-
-    cor[0] = msg.r
+    global cor
+    cor[2] = msg.r
     cor[1] = msg.g
-    cor[2] = msg.b
+    cor[0] = msg.b
 
 def alteraLed(cor):
     cv.circle(img, (255-1,255-1), 255, cor, -1)
@@ -29,7 +29,7 @@ if __name__ == '__main__':
 
         rospy.init_node('led', anonymous="True")
 
-        rospy.Subscriber('led_cor', LedColor, recebeCor)
+        rospy.Subscriber('led_color', LedColor, recebeCor)
 
         #Inscricao para publicar/receber aqui!
 
