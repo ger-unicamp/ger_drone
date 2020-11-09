@@ -93,7 +93,7 @@ def getSensor():
 def voarSensor(lista):
     PoseSensores = []
     for i in lista:
-        print(i)
+        #print(i)
         if i.pose.position.y < -3.4:
             p = [(i.pose.position.x)+0.4,i.pose.position.y,0.6]
         else:

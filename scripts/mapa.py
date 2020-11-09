@@ -287,7 +287,8 @@ def afinaLista():
                     poseMediaMelhor[0] = poseMedia[0] / nInlier
                     poseMediaMelhor[1] = poseMedia[1] / nInlier
 
-            if (nSensorEscolhido >= 5) and ((nInlierMelhor / len(sensores)) < 0.3):
+            if (nSensorEscolhido >= 5) and ((float(nInlierMelhor )/ float(len(sensores))) < 0.3):
+                rospy.loginfo(str(nInlierMelhor)+" "+str(len(sensores))+" "+str(nSensor))
                 break
             
             nSensorEscolhido += 1
@@ -355,7 +356,7 @@ def afinaLista():
                     poseMediaMelhor[0] = poseMedia[0] / nInlier
                     poseMediaMelhor[1] = poseMedia[1] / nInlier
 
-            if nInlierMelhor < nCubos/3:
+            if nInlierMelhor < float(nCubos)/3.0:
                 break
 
             pose = np.array([cubos[melhor].pose.position.x,cubos[melhor].pose.position.y])
