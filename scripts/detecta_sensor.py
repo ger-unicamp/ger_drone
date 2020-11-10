@@ -39,15 +39,8 @@ def inverteTransformacao(R, t):
 def procuraQuadrado(mascara):
     kernel = np.ones((5,5),np.uint8)
     
-    contours = []
-    hierarchy = []
-
     bordas = cv.Canny(mascara, 100, 500, kernel)
-
-    try:
-        contours,hierarchy = cv.findContours(bordas, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE)
-    except:
-        _, contours, hierarchy = cv.findContours(bordas, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE)
+    contours,hierarchy = cv.findContours(bordas, cv.RETR_TREE, cv.CHAIN_APPROX_NONE)
 
     quadrados = []
 
@@ -80,6 +73,13 @@ def procuraQuadrado(mascara):
             quadrados = np.delete(quadrados, i, 0)
             
         i+=1
+
+    while len(quadrados) > i:
+        if np.linalg.norm(quadrados[i][0]-quadrados[i][1])/np.linalg.norm(quadrados[i][2]-quadrados[i][1]) <0.9:
+           quadrados = np.delete(quadrados, i, 0) 
+        i+=1
+
+    i = 0
     
     return quadrados
 
@@ -103,11 +103,11 @@ def recebeImagem(msg):
     #Calcula as mascaras
     hsv = cv.cvtColor(img, cv.COLOR_BGR2HSV)
 
-    min_verde = np.array([50,200,0],np.uint8)
+    min_verde = np.array([50,200,150],np.uint8)
     max_verde = np.array([150,255,255],np.uint8)
     masc_verde = cv.inRange(hsv,min_verde,max_verde)
 
-    min_verm = np.array([0,210,100],np.uint8)
+    min_verm = np.array([0,210,150],np.uint8)
     max_verm = np.array([8,255,255],np.uint8)
     masc_verm = cv.inRange(hsv,min_verm,max_verm)
 
@@ -116,9 +116,12 @@ def recebeImagem(msg):
     quadVerde = procuraQuadrado(masc_verde)
     quadVerm = procuraQuadrado(masc_verm)
 
+    
 
     #Calcula as poses e publica
     quadVerde = quadVerde.astype(np.float32)
+
+    #imprimeTodosQuadrados(quadVerde, img)
 
     for quad in quadVerde:
         R, t = estimaPoseSensor(quad)
@@ -174,6 +177,13 @@ def recebeInfo(msg):
 
     K = np.array(K,dtype=np.float32)
 
+def imprimeTodosQuadrados(quadrados, img):
+    global imgDraw
+    imgDraw = img.copy()
+    for quad in quadrados:
+        for point in quad:
+            cv.circle(imgDraw, (point[0], point[1]), 5, (255,0,255), -1)
+
 if __name__ == '__main__':
     try:
 
@@ -188,10 +198,16 @@ if __name__ == '__main__':
 
         rate = rospy.Rate(10) #Define a frequencia de execucao em Hz
 
+        imgDraw = np.zeros((700, 700))
     
 
         while not rospy.is_shutdown():
             rate.sleep() #Espera o tempo para executar o programa na frequencia definida
 
+            #cv.imshow("Mapa", imgDraw)
+            #cv.waitKey(1)
+        #cv.destroyAllWindows()
     except rospy.ROSInternalException:
+
+        #cv.destroyAllWindows()
         pass

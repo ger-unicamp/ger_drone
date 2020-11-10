@@ -8,7 +8,7 @@ from scipy.spatial.transform import Rotation
 from matplotlib import pyplot as plt
 import cv2 as cv
 
-from mrs_msgs.msg import UavState
+from mrs_msgs.msg import UavState, PositionCommand
 from ger_drone.msg import Object, Identifier, ObjectState
 
 from ger_drone.srv import GetObject, GetObjectResponse
@@ -26,8 +26,8 @@ nIteracao = 10
 objetos = []
 
 # Vetor de posicoes para calculo de coordenadas
-tDroneWorld = np.asarray([0,0,0])
-RDroneWorld = np.asarray([[1,0,0],[0,1,0],[0,0,1]])
+tDroneWorld = np.asarray([0.0,0.0,0.0])
+RDroneWorld = np.asarray([[1.0,0.0,0.0],[0.0,1.0,0.0],[0.0,0.0,1.0]])
 muitoRapido = True
 
 indiceMaximo = -1
@@ -64,8 +64,8 @@ def recebeObjeto(msg):
 
     #rospy.loginfo("Pose: "+str(tObjWorld[0])+" "+str(tObjWorld[1])+" "+str(tObjWorld[2]))
 
-    if(np.linalg.norm(tObjWorld[:2] - tDroneWorld[:2]) > 1.2):
-        return
+    #if(np.linalg.norm(tObjWorld[:2] - tDroneWorld[:2]) > 1.2):
+     #   return
         
 
     if(tObjWorld[0] > 6.5 or tObjWorld[0] < -0.45):
@@ -125,6 +125,7 @@ def recebeObjeto(msg):
 def recebeOdometria(msg):
     global tDroneWorld, RDroneWorld, muitoRapido
 
+
     tDroneWorld[0] = msg.pose.position.x
     tDroneWorld[1] = msg.pose.position.y
     tDroneWorld[2] = msg.pose.position.z
@@ -133,10 +134,13 @@ def recebeOdometria(msg):
     RDroneWorld = r.as_dcm()
 
     if((abs(msg.velocity.linear.x) > 0.05 or abs(msg.velocity.linear.y) > 0.05) or
-        (abs(msg.acceleration.linear.x) > 0.4 or abs(msg.acceleration.linear.y) > 0.4)):
+        (abs(msg.acceleration.linear.x) > 0.4 or abs(msg.acceleration.linear.y) > 0.4) or
+        (abs(msg.velocity.angular.x) > 0.07 or abs(msg.velocity.angular.y) > 0.07)):
         muitoRapido = True
     else:
         muitoRapido = False
+
+
 
 def logObjetos():
     log = str(len(objetos))
@@ -230,9 +234,19 @@ def afinaLista():
     if nSensor != 0:
 
         melhorErro = 999999999999
-        pontos = [0,0]
+        pontos = [[2.68,0],[3.87,-6.3]]
 
-        for i in range(10):
+        dx = pontos[0][0] - pontos[1][0]
+        dy = pontos[0][1] - pontos[1][1]
+        det = (dx*dx) + (dy*dy)
+        
+        for i in range(len(sensores)):
+            a = (dy*(sensores[i].pose.position.y-pontos[0][1])+dx*(sensores[i].pose.position.x-pontos[0][0]))/det
+
+            sensores[i].pose.position.x = (a*dx) + pontos[0][0]
+            sensores[i].pose.position.y = (a*dy) + pontos[0][1]
+
+        '''for i in range(10):
             index1 = int(np.random.rand(1)[0]*len(sensores))
             index2 = int(np.random.rand(1)[0]*len(sensores))
 
@@ -251,7 +265,7 @@ def afinaLista():
                 melhorErro = erro
                 pontos[0] = p1
                 pontos[1] = p2
-            
+        '''
 
 
         while True:
@@ -275,7 +289,7 @@ def afinaLista():
                     if (sensores[k].identifier.type.data != sensores[index].identifier.type.data):
                         continue
                     poseTeste = np.array([sensores[k].pose.position.x,sensores[k].pose.position.y])
-                    if(np.linalg.norm(pose-poseTeste) < 0.2):
+                    if(np.linalg.norm(pose-poseTeste) < 0.05):
                         nInlier += 1
                         poseMedia[0] += poseTeste[0]
                         poseMedia[1] += poseTeste[1]
@@ -287,7 +301,7 @@ def afinaLista():
                     poseMediaMelhor[0] = poseMedia[0] / nInlier
                     poseMediaMelhor[1] = poseMedia[1] / nInlier
 
-            if (nSensorEscolhido >= 5) and ((float(nInlierMelhor )/ float(len(sensores))) < 0.3):
+            if (nSensorEscolhido >= 5) and ((float(nInlierMelhor )/ float(nSensor)) < 0.28):
                 rospy.loginfo(str(nInlierMelhor)+" "+str(len(sensores))+" "+str(nSensor))
                 break
             
@@ -318,7 +332,7 @@ def afinaLista():
                     k+=1
                     continue
                 poseTeste = np.array([sensores[k].pose.position.x,sensores[k].pose.position.y])
-                if(np.linalg.norm(pose- poseTeste) < 0.2):
+                if(np.linalg.norm(pose- poseTeste) < 0.05):
                     del sensores[k]
                 else:
                     k += 1
@@ -356,7 +370,7 @@ def afinaLista():
                     poseMediaMelhor[0] = poseMedia[0] / nInlier
                     poseMediaMelhor[1] = poseMedia[1] / nInlier
 
-            if nInlierMelhor < float(nCubos)/3.0:
+            if ((float(nInlierMelhor )/ float(nCubos)) < 0.2):
                 break
 
             pose = np.array([cubos[melhor].pose.position.x,cubos[melhor].pose.position.y])
@@ -486,6 +500,14 @@ def imprimeMapa():
 
     imgMapa = np.ones((800,800,3),np.uint8)*255
 
+    for i in range(16):
+        cv.line(imgMapa, (i*50,0), (i*50,800), (0,0,0), 1)
+        cv.line(imgMapa, (0,i*50), (800, i*50), (0,0,0), 1)
+
+    cv.line(imgMapa, (268+50,0+50),(387+50,630+50), (0,138,129),1)
+
+    cv.circle(imgMapa, (int(tDroneWorld[0]*100)+50, int(-tDroneWorld[1]*100)+50), 4, (255,0,255), -1)
+
     for obj in objetos:
 
         cor = [0,0,0]
@@ -498,6 +520,8 @@ def imprimeMapa():
             cor[2] = 255
         elif(obj.identifier.type.data == Identifier.TYPE_BASE):
             cor[0] = 255
+        else:
+            cor[2] = 255
 
 
         if obj.identifier.state.data == Identifier.STATE_PROCESSADO:
@@ -508,7 +532,7 @@ def imprimeMapa():
         posicao[0] = (obj.pose.position.x *100)+50
         posicao[1] = (-obj.pose.position.y*100)+50
 
-        cv.circle(imgMapa, (int(posicao[0]),int(posicao[1])), 5, (cor[0],cor[1],cor[2]), -1)
+        cv.circle(imgMapa, (int(posicao[0]),int(posicao[1])), 3, (cor[0],cor[1],cor[2]), -1)
 
 if __name__ == '__main__':
     try:
@@ -558,6 +582,7 @@ if __name__ == '__main__':
 
         # Subscriber para receber odometria
         rospy.Subscriber('uav_state', UavState, recebeOdometria)
+        #rospy.Subscriber('position_cmd', PositionCommand, recebeOdometria)
 
         # Servico GetObject para entregar objetos
         rospy.Service('get_object', GetObject, entregaListaObjetos)

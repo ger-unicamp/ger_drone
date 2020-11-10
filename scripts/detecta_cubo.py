@@ -24,7 +24,7 @@ pontoReal = np.array([[-3.588e-2,-3.588e-2,0],
                     [3.588e-2,-3.588e-2,0]], dtype=np.float32)
 
 def converteImagem(img):
-    return CvBridge().imgmsg_to_cv2(img)
+    return CvBridge().imgmsg_to_cv2(img, "bgr8")
 
 def inverteTransformacao(R, t):
     RInverso = np.transpose(R)
@@ -51,6 +51,11 @@ def recebeImagem(msg):
     img = converteImagem(msg)
 
     data = decode(img)
+
+    if data == []:
+        return
+
+    #rospy.loginfo("Pacotes detectados: "+str(len(data)))
 
     for qr in data:
         letra = qr.data

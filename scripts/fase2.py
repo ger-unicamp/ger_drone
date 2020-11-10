@@ -95,7 +95,7 @@ def voarSensor(lista):
     for i in lista:
         #print(i)
         if i.pose.position.y < -3.4:
-            p = [(i.pose.position.x)+0.4,i.pose.position.y,0.6]
+            p = [(i.pose.position.x),i.pose.position.y,0.6]
         else:
             p = [i.pose.position.x,i.pose.position.y,0.6]
         PoseSensores.append(p)
@@ -128,8 +128,8 @@ if __name__ == '__main__':
         pub = rospy.Publisher('led_color', LedColor, queue_size=10)
         #decolar()
         #rospy.sleep(8)
-        # eq do caminho y = -5.25x + 13.9125   entre x = 2.65 e x =3.85
-        partida = [2.65,0,0.8]
+        # eq do caminho y = -5.2941x + 14.1882   entre x = 2.68 e x =3.87
+        partida = [2.68,0,0.8]
         voar(partida)
         rospy.sleep(3)
     
@@ -145,7 +145,7 @@ if __name__ == '__main__':
         
         px.append(3.85)
         for j in px:
-            y = -5.25*j + 13.9125
+            y = -5.2941*j + 14.1882
             poses.append([j,y,z])    
 
         for h in poses:

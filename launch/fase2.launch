@@ -7,6 +7,7 @@
 
     <node name="mapa" pkg="ger_drone"  type="mapa.py" ns="/ger_drone" output="screen">
         <remap from="uav_state" to="/uav1/odometry/uav_state" />
+        <remap from="position_cmd" to="/uav1/control_manager/position_cmd" />
         <param name="escrever" value="false"/>
         <param name="ler" value="true"/>
         <param name="imprimir" value="true"/>
