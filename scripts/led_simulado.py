@@ -6,6 +6,7 @@ import cv2 as cv
 import numpy as np
 
 from ger_drone.msg import LedColor
+from matplotlib import pyplot as plt
 
 cor = [0,0,0]
 
@@ -19,8 +20,6 @@ def recebeCor(msg):
 
 def alteraLed(cor):
     cv.circle(img, (255-1,255-1), 255, cor, -1)
-    cv.imshow("LED", img)
-    cv.waitKey(1)
     
 
 
@@ -37,13 +36,24 @@ if __name__ == '__main__':
 
         alteraLed([0.5,0.5,0.5])
 
+        im = plt.imshow(img)
         while not rospy.is_shutdown():
 
             alteraLed(cor)
 
+            if(cv.__version__[0] == "4"):
+                cv.imshow("LED", img)
+                cv.waitKey(1)
+            else:
+                im.set_data(cv.cvtColor(img, cv.COLOR_BGR2RGB))
+                plt.pause(.1)
+                plt.draw()
+
             rate.sleep() #Espera o tempo para executar o programa na frequencia definida
-        cv.destroyAllWindows()
+        if(cv.__version__[0] == "4"):
+            cv.destroyAllWindows()
 
     except rospy.ROSInternalException:
-        cv.destroyAllWindows()
+        if(cv.__version__[0] == "4"):
+            cv.destroyAllWindows()
         pass

@@ -22,11 +22,15 @@ chegou = False
 rospy.init_node('fase1')
 
 def pousar():
-   print('P')
-   rospy.wait_for_service('/uav1/uav_manager/land')
-   um = rospy.ServiceProxy('/uav1/uav_manager/land', Trigger)
-   reqa = Trigger._request_class()
-   um(reqa)
+    print('P')
+    rospy.wait_for_service('/uav1/uav_manager/land')
+    um = rospy.ServiceProxy('/uav1/uav_manager/land', Trigger)
+    reqa = Trigger._request_class()
+    um(reqa)
+
+    rospy.sleep(1)
+    while(chegou == False):
+        pass
    
 
 def decolar():
@@ -36,11 +40,16 @@ def decolar():
     reqb = Trigger._request_class()
     dois(reqb)
 
+    rospy.sleep(1)
+
+    while(chegou == False):
+        pass
+
 def rotina():
     pousar()
-    rospy.sleep(10)
+    rospy.sleep(2)
     decolar()
-    rospy.sleep(10)
+    rospy.sleep(2)
     
 
 def voar(a):
@@ -135,7 +144,6 @@ def preparapouso(j):
     a = [j[0],j[1],1]
     voar(a)
     ajustaPonto(a)
-    rospy.sleep(3)
 
 def recebeDiagnostico(msg):
     global chegou
@@ -155,6 +163,8 @@ def ajustaPonto(ponto):
     rospy.sleep(1)
 
     voar(ponto)
+
+    rospy.sleep(3)
 
     req.value = "MpcController"
     proxy(req)

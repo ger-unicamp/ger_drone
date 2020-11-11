@@ -16,9 +16,11 @@ from std_srvs.srv import SetBool, SetBoolResponse
 
 import csv
 
+from matplotlib import pyplot as plt
+
 
 num = 1.0
-nBase = 5
+nBase = 3
 nSensor = 5
 nIteracao = 10
 
@@ -155,6 +157,20 @@ def logObjetos():
 
     rospy.loginfo(log)
 
+def objComparator(obj1, obj2):
+    pose1 = np.array([obj1.pose.position.x,obj1.pose.position.y])
+    pose2 = np.array([obj2.pose.position.x,obj2.pose.position.y])
+
+    dist1 = np.linalg.norm(pose1-tDroneWorld[:2])
+    dist2 = np.linalg.norm(pose2-tDroneWorld[:2])
+
+    if dist1<dist2:
+        return -1
+    elif dist1<dist2:
+        return 1
+    else:
+        return 0
+
 def afinaLista():
     global objetos, atualizaMapa, fixo
 
@@ -171,7 +187,7 @@ def afinaLista():
 
     k = 0
 
-    while(k < len(objetos)):
+    while(k < len(objetos) and len(fixo) != 0):
         if fixo[k] == True:
             novaLista.append(objetos[k])
             novoFixo.append(True)
@@ -428,6 +444,8 @@ def afinaLista():
     objetos = novaLista
     fixo = novoFixo
 
+    objetos = sorted(objetos, cmp=objComparator)
+
     imprimeMapa()
 
 
@@ -540,12 +558,12 @@ def imprimeMapa():
     imgMapa = np.ones((800,800,3),np.uint8)*255
 
     for i in range(16):
-        cv.line(imgMapa, (i*50,0), (i*50,800), (0,0,0), 1)
-        cv.line(imgMapa, (0,i*50), (800, i*50), (0,0,0), 1)
+        cv.line(imgMapa, (i*50,0), (i*50,800), (0,0,0), 2)
+        cv.line(imgMapa, (0,i*50), (800, i*50), (0,0,0), 2)
 
-    cv.line(imgMapa, (268+50,0+50),(387+50,630+50), (0,138,129),1)
+    cv.line(imgMapa, (268+50,0+50),(387+50,630+50), (0,138,129),2)
 
-    cv.circle(imgMapa, (int(tDroneWorld[0]*100)+50, int(-tDroneWorld[1]*100)+50), 4, (255,0,255), -1)
+    cv.circle(imgMapa, (int(tDroneWorld[0]*100)+50, int(-tDroneWorld[1]*100)+50), 5, (255,0,255), -1)
 
     for obj in objetos:
 
@@ -571,7 +589,47 @@ def imprimeMapa():
         posicao[0] = (obj.pose.position.x *100)+50
         posicao[1] = (-obj.pose.position.y*100)+50
 
-        cv.circle(imgMapa, (int(posicao[0]),int(posicao[1])), 3, (cor[0],cor[1],cor[2]), -1)
+        cv.circle(imgMapa, (int(posicao[0]),int(posicao[1])), 5, (cor[0],cor[1],cor[2]), -1)
+
+def insereBasesSuspensas():
+    global objetos, fixo
+    base1 = Object()
+    base1.identifier.data=''
+    base1.identifier.index.data=0
+    base1.identifier.state.data=Identifier.STATE_NOPROCESSADO
+    base1.identifier.type.data=Identifier.TYPE_BASE
+
+    base1.pose.orientation.x = 0.0
+    base1.pose.orientation.y = 0.0
+    base1.pose.orientation.z = 0.0
+    base1.pose.orientation.w = 1.0
+
+    base1.pose.position.x = 0.25
+    base1.pose.position.y = -6.0
+    base1.pose.position.z = 1.0
+
+    objetos.append(base1)
+    fixo.append(True)
+
+    base1 = Object()
+    base1.identifier.data=''
+    base1.identifier.index.data=1
+    base1.identifier.state.data=Identifier.STATE_NOPROCESSADO
+    base1.identifier.type.data=Identifier.TYPE_BASE
+
+    base1.pose.orientation.x = 0.0
+    base1.pose.orientation.y = 0.0
+    base1.pose.orientation.z = 0.0
+    base1.pose.orientation.w = 1.0
+
+    base1.pose.position.x = 3.25
+    base1.pose.position.y = -0.08
+    base1.pose.position.z = 1.0
+
+    objetos.append(base1)
+    fixo.append(True)
+
+
 
 if __name__ == '__main__':
     try:
@@ -628,27 +686,38 @@ if __name__ == '__main__':
 
         rospy.Service('set_atualiza_mapa', SetBool, setAtualizaMapa)
 
+        
+        insereBasesSuspensas()
 
         # Define a frequencia de execucao em Hz
         rate = rospy.Rate(10)
         
+        im = plt.imshow(imgMapa)
 
         # Checa por mensagem ou servico
         while not rospy.is_shutdown():
             if imprime == True:
                 imprimeMapa()
-                cv.imshow("Mapa", imgMapa)
-                cv.waitKey(1)
+                if(cv.__version__[0] == "4"):
+                    cv.imshow("Mapa", imgMapa)
+                    cv.waitKey(1)
+                else:
+                    im.set_data(cv.cvtColor(imgMapa, cv.COLOR_BGR2RGB))
+                    plt.pause(.1)
+                    plt.draw()
             # Espera o tempo para executar o programa na frequencia definida
             rate.sleep()
 
-        #if(escreve == True):
-        #    gerarArquivo()
-        gerarArquivo()
-        cv.destroyAllWindows()
+        if(escreve == True):
+            gerarArquivo()
+
+        if(cv.__version__[0] == "4"):
+            cv.destroyAllWindows()
     except rospy.ROSInternalException:
-        #if(escreve == True):
-            #gerarArquivo()
-        gerarArquivo()
+        if(escreve == True):
+            gerarArquivo()
+
+        if(cv.__version__[0] == "4"):
+            cv.destroyAllWindows()
         cv.destroyAllWindows()
         pass

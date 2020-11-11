@@ -57,6 +57,9 @@ def recebeInfo(msg):
 
     K = np.array(K,dtype=np.float32)
 
+def errorHandler(status, func_name, err_msg, dile_name, line, user_data):
+    pass
+
 def procuraQuadrado(mascara):
     kernel = np.ones((5,5),np.uint8)
     
@@ -65,9 +68,9 @@ def procuraQuadrado(mascara):
     contours = []
     hierarchy = []
 
-    try:
+    if(cv.__version__[0] == "4"):
         contours,hierarchy = cv.findContours(bordas, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE)
-    except:
+    else:
         _, contours, hierarchy = cv.findContours(bordas, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE)
 
     quadrados = []
@@ -175,17 +178,28 @@ def recebeImagem(msg):
         rospy.loginfo("Bases encontradas: "+str(len(quadrados)))
         #imprimeTodosQuadrados(quadrados, img)
 
+
     for pontoImagem in quadrados:
+        global pontoReal
 
+        a = 0
+        RCamObj = []
+        tCamObj = []
 
-
-        a, RCamObj, tCamObj, _ = cv.solvePnPRansac(pontoReal,pontoImagem , K, np.zeros((5,1)))
+        if(cv.__version__[0] == "4"):
+            a, RCamObj, tCamObj, _ = cv.solvePnPRansac(pontoReal,pontoImagem , K, np.zeros((5,1)))
+        else:
+            pontoI = np.expand_dims(pontoImagem, 1)
+            pontoR = np.expand_dims(pontoReal, 1)
+            rospy.loginfo(str(pontoI.shape)+" "+str(pontoR.shape))
+            a, RCamObj, tCamObj, _ = cv.solvePnPRansac(pontoR,pontoI , K, np.zeros((5,1), dtype=np.float32))
 
         tCamObj = tCamObj.ravel()
 
         RCamObj, _ = cv.Rodrigues(RCamObj)
 
         publicaBase(RCamObj, tCamObj)
+
 
 def publicaBase(R, t):
     msg = Object()

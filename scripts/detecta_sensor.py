@@ -40,7 +40,14 @@ def procuraQuadrado(mascara):
     kernel = np.ones((5,5),np.uint8)
     
     bordas = cv.Canny(mascara, 100, 500, kernel)
-    contours,hierarchy = cv.findContours(bordas, cv.RETR_TREE, cv.CHAIN_APPROX_NONE)
+
+    contours = []
+    hierarchy = []
+
+    if(cv.__version__[0] == "4"):
+        contours,hierarchy = cv.findContours(bordas, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE)
+    else:
+        _, contours, hierarchy = cv.findContours(bordas, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE)
 
     quadrados = []
 
@@ -87,7 +94,18 @@ def procuraQuadrado(mascara):
 def estimaPoseSensor(quad):
 
 
-    a, RCamObj, tCamObj, _ = cv.solvePnPRansac(pontoReal,quad , K, np.zeros((5,1)))
+    a = 0
+    RCamObj = []
+    tCamObj = []
+
+    if(cv.__version__[0] == "4"):
+        a, RCamObj, tCamObj, _ = cv.solvePnPRansac(pontoReal,quad , K, np.zeros((5,1)))
+    else:
+        pontoI = np.expand_dims(quad, 1)
+        pontoR = np.expand_dims(pontoReal, 1)
+        rospy.loginfo(str(pontoI.shape)+" "+str(pontoR.shape))
+        a, RCamObj, tCamObj, _ = cv.solvePnPRansac(pontoR,pontoI , K, np.zeros((5,1), dtype=np.float32))
+
 
     tCamObj = tCamObj.ravel()
 
