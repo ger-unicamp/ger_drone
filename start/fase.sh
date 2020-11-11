@@ -26,7 +26,7 @@ pre_input="export UAV_NAME=uav1; export RUN_TYPE=simulation; export ODOMETRY_TYP
 # 'name' 'command'
 # DO NOT PUT spaces in the names
 input=(
-    'padrao' "roslaunch ger_drone padrao.launch;
+    'padrao' "roslaunch ger_drone padrao.launch fase:=$1;
     "
     'fase' "waitForRos; roslaunch ger_drone fase$1.launch;
     " 

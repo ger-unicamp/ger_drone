@@ -156,13 +156,14 @@ def logObjetos():
     rospy.loginfo(log)
 
 def afinaLista():
-    global objetos, atualizaMapa
+    global objetos, atualizaMapa, fixo
 
-    atualizaMapa = False
+    #atualizaMapa = False
 
     rospy.loginfo("Refinando lista de objetos")
 
     novaLista = []
+    novoFixo = []
 
     bases = []
     sensores = []
@@ -171,43 +172,45 @@ def afinaLista():
     k = 0
 
     while(k < len(objetos)):
-        if fixo[i] == True:
-            novaLista.append(objetos[i])
-            del objetos[i]
-            del fixo[i]  
+        if fixo[k] == True:
+            novaLista.append(objetos[k])
+            novoFixo.append(True)
+            del objetos[k]
+            del fixo[k]  
         else:
             k += 1
 
     k = 0
-
     while(k < len(objetos)):
-        for i in range(len(novaLista)):
-                
-            poseTeste = np.array([sensores[k].pose.position.x,sensores[k].pose.position.y])
-            if(np.linalg.norm(pose- poseTeste) < 0.05):
-                del sensores[k]
-            else:
-                k += 1
 
-        if fixo[i] == True:
-            novaLista.append(objetos[i])
-            del objetos[i]
-            del fixo[i]  
-        else:
+        existe = False
+
+        for i in range(len(novaLista)):
+            if(novaLista[i].identifier.type.data == objetos[k].identifier.type.data ):
+
+                poseFixo = np.array([novaLista[i].pose.position.x,novaLista[i].pose.position.y])    
+                poseTeste = np.array([objetos[k].pose.position.x,objetos[k].pose.position.y])
+
+                if(np.linalg.norm(poseFixo- poseTeste) < 1):
+                    del objetos[k]
+                    existe = True
+                    break
+        
+        if existe == False:
+            tipo = objetos[k].identifier.type.data
+
+            if tipo == Identifier.TYPE_BASE:
+                bases.append(objetos[k])
+            elif (tipo == Identifier.TYPE_SENSOR_VERDE or 
+            tipo == Identifier.TYPE_SENSOR_VERMELHO):
+                sensores.append(objetos[k])
+            elif (tipo == Identifier.TYPE_PACOTE_A or tipo == Identifier.TYPE_PACOTE_B 
+                or tipo == Identifier.TYPE_PACOTE_C or tipo == Identifier.TYPE_PACOTE_D 
+                or Identifier.TYPE_PACOTE_E):
+                cubos.append(objetos[k])
+            
             k += 1
 
-    for i in range(len(objetos)):
-        tipo = objetos[i].identifier.type.data
-
-        if tipo == Identifier.TYPE_BASE:
-            bases.append(objetos[i])
-        elif (tipo == Identifier.TYPE_SENSOR_VERDE or 
-        tipo == Identifier.TYPE_SENSOR_VERMELHO):
-            sensores.append(objetos[i])
-        elif (tipo == Identifier.TYPE_PACOTE_A or tipo == Identifier.TYPE_PACOTE_B 
-            or tipo == Identifier.TYPE_PACOTE_C or tipo == Identifier.TYPE_PACOTE_D 
-            or Identifier.TYPE_PACOTE_E):
-            cubos.append(objetos[i])
 
     if len(bases) != 0:
 
@@ -248,6 +251,7 @@ def afinaLista():
             bases[melhor].pose.position.y = poseMediaMelhor[1]
 
             novaLista.append(bases[melhor])
+            novoFixo.append(True)
             
             k = 0
 
@@ -354,6 +358,7 @@ def afinaLista():
             tipo = sensores[melhor].identifier.type.data
 
             novaLista.append(sensores[melhor])
+            novoFixo.append(True)
             
             k = 0
 
@@ -409,6 +414,7 @@ def afinaLista():
             cubos[melhor].pose.position.y = poseMediaMelhor[1]
 
             novaLista.append(cubos[melhor])
+            novoFixo.append(True)
             
             k = 0
 
@@ -420,7 +426,8 @@ def afinaLista():
                     k += 1
 
     objetos = novaLista
-    
+    fixo = novoFixo
+
     imprimeMapa()
 
 
@@ -523,6 +530,8 @@ def setAtualizaMapa(req):
     resp = SetBoolResponse()
     resp.success = True
     resp.message = "Alterado com sucesso"
+
+    return resp
 
 def imprimeMapa():
 

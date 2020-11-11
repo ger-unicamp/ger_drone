@@ -9,7 +9,7 @@ from mrs_msgs.srv import ReferenceStampedSrv
 from geometry_msgs.msg import Point
 from mrs_msgs.srv import String 
 from mrs_msgs.msg import PositionCommand, ControlManagerDiagnostics
-
+from std_srvs.srv import SetBool
 
 from ger_drone.msg import Identifier
 from ger_drone.srv import GetObject
@@ -107,6 +107,15 @@ def getListObject():
 
     response = cinco(reqc)
     lista =  response.list
+
+    rospy.wait_for_service('/ger_drone/set_atualiza_mapa')
+    proxy = rospy.ServiceProxy('/ger_drone/set_atualiza_mapa', SetBool)
+    req = SetBool._request_class()
+    
+    req.data = False
+
+    proxy(req)
+    
     getPose(lista)
 
 def getPose(lista):

@@ -5,4 +5,17 @@
 <launch>
     <node name="image_proc" pkg="image_proc" type="image_proc" ns="/uav1/bluefox_optflow"/>
     
+    <arg name="FASE" default="$(arg fase)" />
+
+    <arg if="$(eval arg('fase') == 1)" name="LER" default="false" />
+    <arg if="$(eval arg('fase') == 2)" name="LER" default="false" />
+    <arg if="$(eval arg('fase') == 3)" name="LER" default="true" />
+    <arg if="$(eval arg('fase') == 4)" name="LER" default="true" />
+
+    <node name="mapa" pkg="ger_drone"  type="mapa.py" ns="/ger_drone" output="screen">
+        <remap from="uav_state" to="/uav1/odometry/uav_state" />
+        <param name="escrever" value="false"/>
+        <param name="ler" value="$(arg LER)"/>
+        <param name="imprimir" value="true"/>
+    </node>
 </launch>
