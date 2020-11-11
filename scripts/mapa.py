@@ -24,6 +24,7 @@ nIteracao = 10
 
 # Lista de bases inicialmente vazia
 objetos = []
+fixo = []
 
 # Vetor de posicoes para calculo de coordenadas
 tDroneWorld = np.asarray([0.0,0.0,0.0])
@@ -118,6 +119,7 @@ def recebeObjeto(msg):
 
     novoObjeto.identifier.data = msg.identifier.data
 
+    fixo.append(False)
     objetos.append(novoObjeto)
     #logObjetos()
 
@@ -165,6 +167,34 @@ def afinaLista():
     bases = []
     sensores = []
     cubos = []
+
+    k = 0
+
+    while(k < len(objetos)):
+        if fixo[i] == True:
+            novaLista.append(objetos[i])
+            del objetos[i]
+            del fixo[i]  
+        else:
+            k += 1
+
+    k = 0
+
+    while(k < len(objetos)):
+        for i in range(len(novaLista)):
+                
+            poseTeste = np.array([sensores[k].pose.position.x,sensores[k].pose.position.y])
+            if(np.linalg.norm(pose- poseTeste) < 0.05):
+                del sensores[k]
+            else:
+                k += 1
+
+        if fixo[i] == True:
+            novaLista.append(objetos[i])
+            del objetos[i]
+            del fixo[i]  
+        else:
+            k += 1
 
     for i in range(len(objetos)):
         tipo = objetos[i].identifier.type.data
