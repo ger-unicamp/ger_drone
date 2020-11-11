@@ -20,7 +20,7 @@ PROJECT_NAME=fase1_sprogram
 MAIN_DIR=~/"bag_files"
 
 # following commands will be executed first, in each window
-pre_input="export UAV_NAME=uav1; export RUN_TYPE=simulation; export ODOMETRY_TYPE=hector; export PX4_SIM_SPEED_FACTOR=1.0"
+pre_input="export UAV_NAME=uav1; export RUN_TYPE=simulation; export ODOMETRY_TYPE=hector; export PX4_SIM_SPEED_FACTOR=1.0; export UAV_TYPE=f450"
 
 # define commands
 # 'name' 'command'

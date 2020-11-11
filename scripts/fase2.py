@@ -2,14 +2,13 @@
 
 import rospy
 from std_srvs.srv import Trigger
-from mrs_msgs.srv import Vec4
-from mrs_msgs.srv import ReferenceStampedSrv
+from mrs_msgs.srv import ReferenceStampedSrv, Vec4, String
 from geometry_msgs.msg import Point
-from mrs_msgs.srv import String 
 from mrs_msgs.msg import PositionCommand
-from ger_drone.msg import Identifier
+from ger_drone.msg import Identifier, LedColor
 from ger_drone.srv import GetObject
-from ger_drone.msg import LedColor
+
+import numpy as np
 
 rospy.init_node('caminho2')
 check = False
@@ -61,12 +60,17 @@ def compara(msg,w):
     posx = msg.position.x
     posy = msg.position.y
     posz = msg.position.z
-    if (posx < w[0] + 0.01 and posx > w[0] - 0.01) and (posy < w[1] + 0.01 and posy > w[1] - 0.01):
+
+    tBase = np.array([w[0],w[1]], np.float32)
+    tDrone = np.array([posx, posy], np.float32)
+
+    if (np.linalg.norm(tBase-tDrone)<0.01):
         print('pronto')
         check = True
     else:
         check = False
-    return()    
+    
+    return   
 
 
 def velocidade():
@@ -93,15 +97,16 @@ def getSensor():
 def voarSensor(lista):
     PoseSensores = []
     for i in lista:
-        #print(i)
-        if i.pose.position.y < -3.4:
-            p = [(i.pose.position.x),i.pose.position.y,0.6]
-        else:
-            p = [i.pose.position.x,i.pose.position.y,0.6]
+        p = [(i.pose.position.x),i.pose.position.y,0.6]
+       
+        
         PoseSensores.append(p)
     for j in PoseSensores:
         print(j)
         voar(j)
+
+        ajustaPonto(j)
+
         rospy.sleep(1)
         ativaLed()
         rospy.sleep(2)
@@ -120,7 +125,23 @@ def ativaLed():
     msg.b = 0
     pub.publish(msg)
 
-   
+def ajustaPonto(ponto):
+    rospy.wait_for_service('/uav1/control_manager/switch_controller')
+    proxy = rospy.ServiceProxy('/uav1/control_manager/switch_controller', String)
+    req = String._request_class()
+    
+    req.value = "Se3Controller"
+    proxy(req)
+
+    rospy.sleep(1)
+
+    voar(ponto)
+
+    req.value = "MpcController"
+    proxy(req)
+
+    rospy.sleep(1)
+
 
 if __name__ == '__main__':
     try:
@@ -137,9 +158,9 @@ if __name__ == '__main__':
         px =[]
         n = 0
         poses =[]
-        z = 0.34
-        for i in range(0,11):
-            p = 2.65 + n*(1.2/11)
+        z = 0.5
+        for i in range(0,9):
+            p = 2.65 + n*(1.2/9)
             n = n+1
             px.append(p)
         
@@ -156,6 +177,7 @@ if __name__ == '__main__':
 
         rospy.sleep(5)
         voar([0,0,1.5])
+        ajustaPonto([0,0,1])
         rospy.sleep(2)
         pousar()    
 
