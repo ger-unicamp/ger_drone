@@ -62,6 +62,7 @@ def recebeImagem(msg):
     for qr in data:
         letra = qr.data
 
+
         pontoImagem = []
         for i in range(4):
             pontoImagem.append([qr.polygon[i][0],qr.polygon[i][1]])
@@ -76,7 +77,6 @@ def recebeImagem(msg):
         else:
             pontoI = np.expand_dims(pontoImagem, 1)
             pontoR = np.expand_dims(pontoReal, 1)
-            rospy.loginfo(str(pontoI.shape)+" "+str(pontoR.shape))
             a, RCamObj, tCamObj, _ = cv.solvePnPRansac(pontoR,pontoI , K, np.zeros((5,1), dtype=np.float32))
 
         tCamObj = tCamObj.ravel()
@@ -90,7 +90,6 @@ def publicaCubo(R, t, letra):
 
     msg.identifier.data = letra
     msg.identifier.type.data = Identifier.TYPE_PACOTE
-
     msg.identifier.state.data = msg.identifier.STATE_DESCONHECIDO
 
     msg.pose.position.x = t[0]
