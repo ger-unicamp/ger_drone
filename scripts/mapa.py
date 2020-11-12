@@ -516,6 +516,10 @@ def recuperaArquivo():
             arquivo.seek(0)
 
             for row in reader:
+                if(len(row) != 11):
+                    rospy.logwarn("Linha incorreta no arquivo .csv")
+                    continue
+
                 novoObjeto = Object()
 
                 novoObjeto.identifier.index.data = int(row[0])
@@ -532,6 +536,7 @@ def recuperaArquivo():
 
                 # Adiciona o objeto na lista global "objetos"
                 objetos.append(novoObjeto)
+                fixo.append(True)
 
         rospy.loginfo("Arquivo lido com sucesso, "+str(len(objetos))+" objetos armazenados")
     except:
@@ -594,7 +599,7 @@ def imprimeMapa():
 def insereBasesSuspensas():
     global objetos, fixo
     base1 = Object()
-    base1.identifier.data=''
+    base1.identifier.data="E"
     base1.identifier.index.data=0
     base1.identifier.state.data=Identifier.STATE_NOPROCESSADO
     base1.identifier.type.data=Identifier.TYPE_BASE
@@ -612,7 +617,7 @@ def insereBasesSuspensas():
     fixo.append(True)
 
     base1 = Object()
-    base1.identifier.data=''
+    base1.identifier.data="D"
     base1.identifier.index.data=1
     base1.identifier.state.data=Identifier.STATE_NOPROCESSADO
     base1.identifier.type.data=Identifier.TYPE_BASE
