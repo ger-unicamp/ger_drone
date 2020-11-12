@@ -103,7 +103,6 @@ def estimaPoseSensor(quad):
     else:
         pontoI = np.expand_dims(quad, 1)
         pontoR = np.expand_dims(pontoReal, 1)
-        rospy.loginfo(str(pontoI.shape)+" "+str(pontoR.shape))
         a, RCamObj, tCamObj, _ = cv.solvePnPRansac(pontoR,pontoI , K, np.zeros((5,1), dtype=np.float32))
 
 
