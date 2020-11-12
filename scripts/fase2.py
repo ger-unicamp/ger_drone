@@ -7,6 +7,7 @@ from geometry_msgs.msg import Point
 from mrs_msgs.msg import PositionCommand
 from ger_drone.msg import Identifier, LedColor
 from ger_drone.srv import GetObject
+from std_srvs.srv import SetBool
 
 import numpy as np
 
@@ -92,6 +93,16 @@ def getSensor():
     response = a(reqf)
     lista = response.list
     print(len(lista))
+
+
+    rospy.wait_for_service('/ger_drone/set_atualiza_mapa')
+    proxy = rospy.ServiceProxy('/ger_drone/set_atualiza_mapa', SetBool)
+    req = SetBool._request_class()
+    
+    req.data = False
+
+    proxy(req)
+
     voarSensor(lista)
 
 def voarSensor(lista):
@@ -109,7 +120,7 @@ def voarSensor(lista):
 
         rospy.sleep(1)
         ativaLed()
-        rospy.sleep(2)
+        #rospy.sleep(2)
 
 def ativaLed():
     msg = LedColor()
@@ -117,7 +128,7 @@ def ativaLed():
     msg.g = 0
     msg.b = 0
     pub.publish(msg)
-    rospy.sleep(4)
+    rospy.sleep(15)
     
     msg = LedColor()
     msg.r = 0
@@ -136,6 +147,8 @@ def ajustaPonto(ponto):
     rospy.sleep(1)
 
     voar(ponto)
+
+    rospy.sleep(2)
 
     req.value = "MpcController"
     proxy(req)
@@ -171,8 +184,7 @@ if __name__ == '__main__':
 
         for h in poses:
             voar(h)
-            rospy.sleep(8)
-        rospy.sleep(5)
+            rospy.sleep(3)
         getSensor()
 
         rospy.sleep(5)

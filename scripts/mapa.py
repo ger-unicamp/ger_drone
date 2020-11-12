@@ -201,17 +201,36 @@ def afinaLista():
 
         existe = False
 
+        pertoBase = False
+
         for i in range(len(novaLista)):
             if(novaLista[i].identifier.type.data == objetos[k].identifier.type.data ):
 
-                poseFixo = np.array([novaLista[i].pose.position.x,novaLista[i].pose.position.y])    
-                poseTeste = np.array([objetos[k].pose.position.x,objetos[k].pose.position.y])
+                if(objetos[k].identifier.type.data == Identifier.TYPE_PACOTE):
+                    if(objetos[k].identifier.data == novaLista[i].identifier.data):
+                        del objetos[k]
+                        existe = True
+                        break
+                else:
+                    poseFixo = np.array([novaLista[i].pose.position.x,novaLista[i].pose.position.y])    
+                    poseTeste = np.array([objetos[k].pose.position.x,objetos[k].pose.position.y])
 
-                if(np.linalg.norm(poseFixo- poseTeste) < 1):
-                    del objetos[k]
-                    existe = True
-                    break
+                    if(np.linalg.norm(poseFixo- poseTeste) < 1):
+                        del objetos[k]
+                        existe = True
+                        break
+                
+            elif(objetos[k].identifier.type.data == Identifier.TYPE_PACOTE and
+                novaLista[i].identifier.type.data == Identifier.TYPE_BASE):
+                
+                if(abs(novaLista[i].pose.position.x-objetos[k].pose.position.x) <= 0.5 and
+                abs(novaLista[i].pose.position.y-objetos[k].pose.position.y) <= 0.5):
+                    pertoBase = True
         
+        if(pertoBase == False and existe == False and objetos[k].identifier.type.data == Identifier.TYPE_PACOTE):
+            del objetos[k]
+            existe = True
+
         if existe == False:
             tipo = objetos[k].identifier.type.data
 
@@ -220,9 +239,7 @@ def afinaLista():
             elif (tipo == Identifier.TYPE_SENSOR_VERDE or 
             tipo == Identifier.TYPE_SENSOR_VERMELHO):
                 sensores.append(objetos[k])
-            elif (tipo == Identifier.TYPE_PACOTE_A or tipo == Identifier.TYPE_PACOTE_B 
-                or tipo == Identifier.TYPE_PACOTE_C or tipo == Identifier.TYPE_PACOTE_D 
-                or Identifier.TYPE_PACOTE_E):
+            elif (tipo == Identifier.TYPE_PACOTE):
                 cubos.append(objetos[k])
             
             k += 1
@@ -296,27 +313,6 @@ def afinaLista():
             sensores[i].pose.position.x = (a*dx) + pontos[0][0]
             sensores[i].pose.position.y = (a*dy) + pontos[0][1]
 
-        '''for i in range(10):
-            index1 = int(np.random.rand(1)[0]*len(sensores))
-            index2 = int(np.random.rand(1)[0]*len(sensores))
-
-            p1 = np.array([sensores[index1].pose.position.x,sensores[index1].pose.position.y])
-            p2 = np.array([sensores[index2].pose.position.x,sensores[index2].pose.position.y])
-
-            erro = 0
-
-            for j in range(len(sensores)):
-                p3 = np.array([sensores[j].pose.position.x,sensores[j].pose.position.y])
-                d = np.linalg.norm(np.cross(p2-p1, p1-p3))/np.linalg.norm(p2-p1)
-
-                erro += d
-
-            if(erro< melhorErro):
-                melhorErro = erro
-                pontos[0] = p1
-                pontos[1] = p2
-        '''
-
 
         while True:
         #for i in range(nSensor):
@@ -351,7 +347,7 @@ def afinaLista():
                     poseMediaMelhor[0] = poseMedia[0] / nInlier
                     poseMediaMelhor[1] = poseMedia[1] / nInlier
 
-            if (nSensorEscolhido >= 5) and ((float(nInlierMelhor )/ float(nSensor)) < 0.28):
+            if (nSensorEscolhido >= 5):
                 rospy.loginfo(str(nInlierMelhor)+" "+str(len(sensores))+" "+str(nSensor))
                 break
             
@@ -404,12 +400,13 @@ def afinaLista():
                 
 
                 pose = np.array([cubos[index].pose.position.x,cubos[index].pose.position.y])
+                data = cubos[index]
                 nInlier =0
                 poseMedia = [0,0]
 
                 for k in range(len(cubos)):
                     poseTeste = np.array([cubos[k].pose.position.x,cubos[k].pose.position.y])
-                    if(np.linalg.norm(pose-poseTeste) < 1.0):
+                    if(np.linalg.norm(pose-poseTeste) < 1.0 and cubos[k].identifier.data == data):
                         nInlier += 1
                         poseMedia[0] += poseTeste[0]
                         poseMedia[1] += poseTeste[1]
@@ -436,7 +433,7 @@ def afinaLista():
 
             while(k < len(cubos)):
                 poseTeste = np.array([cubos[k].pose.position.x,cubos[k].pose.position.y])
-                if(np.linalg.norm(pose- poseTeste) < 1.0):
+                if(np.linalg.norm(pose- poseTeste) < 1.0 and cubos[k].identifier.data == data):
                     del cubos[k]
                 else:
                     k += 1

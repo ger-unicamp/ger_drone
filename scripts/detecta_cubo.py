@@ -48,6 +48,8 @@ def recebeInfo(msg):
     K = np.array(K,dtype=np.float32)
 
 def recebeImagem(msg):
+    global pontoReal
+
     img = converteImagem(msg)
 
     data = decode(img)
@@ -65,7 +67,17 @@ def recebeImagem(msg):
             pontoImagem.append([qr.polygon[i][0],qr.polygon[i][1]])
         pontoImagem = np.array(pontoImagem, dtype=np.float32)
 
-        a, RCamObj, tCamObj, _ = cv.solvePnPRansac(pontoReal,pontoImagem , K, np.zeros((5,1)))
+        a = 0
+        RCamObj = []
+        tCamObj = []
+
+        if(cv.__version__[0] == "4"):
+            a, RCamObj, tCamObj, _ = cv.solvePnPRansac(pontoReal,pontoImagem , K, np.zeros((5,1)))
+        else:
+            pontoI = np.expand_dims(pontoImagem, 1)
+            pontoR = np.expand_dims(pontoReal, 1)
+            rospy.loginfo(str(pontoI.shape)+" "+str(pontoR.shape))
+            a, RCamObj, tCamObj, _ = cv.solvePnPRansac(pontoR,pontoI , K, np.zeros((5,1), dtype=np.float32))
 
         tCamObj = tCamObj.ravel()
 
@@ -76,18 +88,8 @@ def recebeImagem(msg):
 def publicaCubo(R, t, letra):
     msg = Object()
 
-    if(letra == 'A'):
-        msg.identifier.type.data = msg.identifier.TYPE_PACOTE_A
-    elif(letra =='B'):
-        msg.identifier.type.data = msg.identifier.TYPE_PACOTE_B
-    elif(letra =='C'):
-        msg.identifier.type.data = msg.identifier.TYPE_PACOTE_C
-    elif(letra =='D'):
-        msg.identifier.type.data = msg.identifier.TYPE_PACOTE_D
-    elif(letra =='E'):
-        msg.identifier.type.data = msg.identifier.TYPE_PACOTE_E
-    else:
-        return
+    msg.identifier.data = letra
+    msg.identifier.type.data = Identifier.TYPE_PACOTE
 
     msg.identifier.state.data = msg.identifier.STATE_DESCONHECIDO
 
