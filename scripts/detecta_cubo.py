@@ -60,6 +60,9 @@ def recebeImagem(msg):
     #rospy.loginfo("Pacotes detectados: "+str(len(data)))
 
     for qr in data:
+        if len(qr.polygon)!= 4:
+            continue
+
         letra = qr.data
 
 

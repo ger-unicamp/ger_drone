@@ -2,7 +2,7 @@
 
 import rospy
 from mrs_msgs.srv import String 
-from mrs_msgs.msg import PositionCommand
+from mrs_msgs.msg import PositionCommand, ControlManagerDiagnostics
 from ger_drone.msg import Identifier, Object
 from ger_drone.srv import GetObject
 from geometry_msgs.msg import Point
@@ -14,6 +14,7 @@ import numpy as np
 
 rospy.init_node('fase4')
 check = False
+chegou = False
 
 def velocidade():
     """!
@@ -88,12 +89,20 @@ def checar(a):
         Parametros:
             @param a: lista [x,y,z] com a posicao desejada
     """
-    global check 
-    while check == False:
+    global check, chegou
+    while (check == False) or (chegou == False):
         pt = rospy.wait_for_message('/uav1/control_manager/position_cmd',PositionCommand)
         compara(pt,a)
         #print(check)
     check = False    
+    print('CHEGOU')
+
+def recebeDiagnostico(msg):
+    global chegou
+    if msg.tracker_status.have_goal == False:
+        chegou = True
+    else:
+        chegou = False
 
 def compara(msg,w):
     global check 
@@ -105,7 +114,6 @@ def compara(msg,w):
     tDrone = np.array([posx, posy], np.float32)
 
     if (np.linalg.norm(tMsg-tDrone)<0.01):
-        print('pronto')
         check = True
     else:
         check = False
@@ -170,11 +178,11 @@ def separa_lista3(lista):
 
         #Vai ate o destino
         voar([origem[0], origem[1], 2.0])
-        rospy.sleep(3)
+        rospy.sleep(5)
         voar([destino[0], destino[1], 2.5])
         rospy.sleep(3)
         voar([destino[0],destino[1],0.8])
-        rospy.sleep(2)
+        rospy.sleep(5)
         #ajustaPonto([destino[0],destino[1],0.8])
 
 
@@ -363,6 +371,8 @@ if __name__ == '__main__':
     try:
         pubObj = rospy.Publisher('objeto_detectado',Object, queue_size=10)
         velocidade()
+
+        rospy.Subscriber('/uav1/control_manager/diagnostics/', ControlManagerDiagnostics, recebeDiagnostico)
 
         #Se o codigo falhar, finaliza voltando ate a base costeira
         try:
