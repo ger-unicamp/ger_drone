@@ -156,7 +156,7 @@ def transformaImagem(img, quad):
 
     pts1 = np.array([pts1[BE],pts1[BD], pts1[CD], pts1[CE] ], dtype=np.float32)
 
-    pts2 = np.float32([[0,0],[100,0], [100,100], [0,100]])
+    pts2 = np.float32([[0,0],[100,0], [100,100], [0,100]], dtype = np.float32)
 
     M = cv.getPerspectiveTransform(pts1,pts2)
     img2 = cv.warpPerspective(img,M,(100,100))
@@ -283,6 +283,9 @@ def recebeImagem(msg):
 
     img = converteImagem(msg)
 
+    if(img is None):
+        return
+
     quadrados = procuraQuadrado(img)
 
     if len(quadrados) == 0:
@@ -320,6 +323,7 @@ def recebeImagem(msg):
         a = 0
         RCamObj = []
         tCamObj = []
+
 
         if(cv.__version__[0] == "4"):
             a, RCamObj, tCamObj, _ = cv.solvePnPRansac(pontoReal,quad , K, np.zeros((5,1)))
