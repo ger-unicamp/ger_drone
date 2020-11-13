@@ -153,7 +153,7 @@ def processaImagem(img, index):
     quadrados = procuraQuadrado(closing)
 
     if len(quadrados) == 0:
-        return
+        return []
 
     for quad in quadrados:
 
@@ -215,9 +215,9 @@ def processaImagem(img, index):
         elif minIndex == 3:
             img2 = cv.rotate(img2,cv.ROTATE_90_CLOCKWISE)
 
-        salvaTodosQuadrados([],img2,index)
+        #salvaTodosQuadrados([],img2,index)
 
-    return quadrados, []
+    return quadrados
 
 percentual = cv.imread('percentual.png')
 
@@ -228,6 +228,8 @@ for i in range(0, 170):
     img = cv.imread(name)
 
     quad = processaImagem(img, i)
+
+    print(len(quad))
 
     #salvaTodosQuadrados(quad, img, i)
 

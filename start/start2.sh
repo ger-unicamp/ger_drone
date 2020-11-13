@@ -28,7 +28,7 @@ pre_input="export UAV_NAME=uav1; export RUN_TYPE=simulation; export ODOMETRY_TYP
 input=(
   'Roscore' "roscore
 "
-  'Gazebo' "waitForRos; roslaunch competition_petrobras UNICAMP.launch gui:=true world_name:=fase4
+  'Gazebo' "waitForRos; roslaunch petrobras_challenge simulation_arena.launch gui:=true
 "
   'Spawn' "waitForSimulation; spawn_uav 1 --file uav1_pos.yaml --f450 --run --delete --enable-rangefinder --enable-rangefinder-up --enable-rplidar --enable-ground-truth --enable-bluefox-camera --enable-realsense-front
 "
