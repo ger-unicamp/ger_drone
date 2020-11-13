@@ -165,7 +165,7 @@ def publicaProcessado(obj):
 
 if __name__ == '__main__':
 
-    rospy.init_node('fase4', anonymous="True")
+    rospy.init_node('fase3', anonymous="True")
 
     pubObj = rospy.Publisher('objeto_detectado',Object, queue_size=10)
 

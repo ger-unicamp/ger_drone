@@ -9,12 +9,16 @@ from geometry_msgs.msg import Point
 from mrs_msgs.srv import ReferenceStampedSrv
 from gazebo_ros_link_attacher.srv import Attach, AttachRequest, AttachResponse
 from std_srvs.srv import SetBool
-
+from std_srvs.srv import Trigger
+import numpy as np
 
 rospy.init_node('fase4')
 check = False
 
 def velocidade():
+    """!
+        Altera o perfil de velocidade do drone para faset
+    """
     rospy.wait_for_service('/uav1/constraint_manager/set_constraints')
     quatro = rospy.ServiceProxy('/uav1/constraint_manager/set_constraints',String)
     reqd = String._request_class()
@@ -23,6 +27,12 @@ def velocidade():
     quatro(reqd)
 
 def ReqPontos():
+    """!
+        Requisita os pontos das bases ao mapa
+
+        Retorno:
+            @return Listas de Object com as bases
+    """
     rospy.wait_for_service('get_object')
     a = rospy.ServiceProxy('get_object', GetObject)
     requ = GetObject._request_class()
@@ -47,6 +57,12 @@ def ReqPontos():
     return(lista)
 
 def voar(a):
+    """!
+        Voa ate uma posicao, verificando se chegou nela
+        
+        Parametros:
+            @param a: lista [x,y,z] com a posicao desejada
+    """
     print(a)
     rospy.wait_for_service('/uav1/control_manager/reference')
     tres = rospy.ServiceProxy('/uav1/control_manager/reference',ReferenceStampedSrv)
@@ -66,6 +82,12 @@ def voar(a):
     checar(lista)
 
 def checar(a):
+    """!
+        Checa se o drone ja chegou na posicao desejada
+        
+        Parametros:
+            @param a: lista [x,y,z] com a posicao desejada
+    """
     global check 
     while check == False:
         pt = rospy.wait_for_message('/uav1/control_manager/position_cmd',PositionCommand)
@@ -78,43 +100,147 @@ def compara(msg,w):
     posx = msg.position.x
     posy = msg.position.y
     posz = msg.position.z
-    if (posx < w[0] + 0.01 and posx > w[0] - 0.01) and (posy < w[1] + 0.01 and posy > w[1] - 0.01):
+
+    tMsg = np.array([w[0],w[1]], np.float32)
+    tDrone = np.array([posx, posy], np.float32)
+
+    if (np.linalg.norm(tMsg-tDrone)<0.01):
         print('pronto')
         check = True
     else:
         check = False
-    return()    
+    
+    return  
+ 
 
-def separa_lista(lista):
-    rotina = []
-    for i in lista:
-        px = i.pose.position.x
-        py = i.pose.position.y
-        pz = 2.5
-        base = [px,py,pz]
-        voar(base)
+def separa_lista2(lista):
+    """!
+        Voa ate as bases da lista, e em cada uma solicita o cubo ao mapa, pega ela, voa e deixa o cubo
+
+        Parametros:
+            @param lista de Object contendo as bases
+    """
+    base1 = [lista[0].pose.position.x, lista[0].pose.position.y,2.5]
+    voar(base1)
+    rospy.sleep(3)
+    base1[2] = 0.5
+    voar([base1[0]+0.2, base1[1]+0.2, base1[2]])
+    del(lista[0])
+    rospy.sleep(5)
+
+    for i in range(4):
+        cubo = base_cubo()
+        publicaProcessado(cubo)
+        proximo = ChecaPose(cubo.identifier.data)
         rospy.sleep(3)
-        voar([px,py,0.5])
-        rospy.sleep(4) 
-        cubo_info = base_cubo(base)
+        ativa_garra(cubo.identifier.data)
         rospy.sleep(3)
-        publicaProcessado(i)
-        voar([px,py,2])
-        infos = [base,cubo_info[1],cubo_info[0]]
-        rotina.append(infos)
-        print(infos)
-    print(rotina) 
-    return(rotina)   
+        voar(proximo)
+        rospy.sleep(4)
+        voar([proximo[0],proximo[1],0.8])
+        rospy.sleep(5)
+        desativa_garra(cubo.identifier.data)
+        rospy.sleep(5)
+        voar([proximo[0]+0.2,proximo[1]+0.2,0.5])
+        
+
+def separa_lista3(lista):
+    bases = ["A","B","C","D","E"]
+    baseOrigem= bases[0]
+
+    origem = ChecaPose(bases[0])
+    voar(origem)
+    voar([origem[0]+0.2,origem[1]+0.2,0.5])
+    #ajustaPonto([origem[0]+0.2,origem[1]+0.2,0.5])
+
+    cubo = base_cubo()
+
+    while len(bases) > 0: 
+        bases.remove(baseOrigem)
+
+        baseDestino = cubo.identifier.data
+        destino = ChecaPose(cubo.identifier.data)
+        
+        
+        print("Posicao do Cubo "+cubo.identifier.data+": "+ str(cubo.pose.position.x)+ " "
+            +str(cubo.pose.position.y)+" "+str(cubo.pose.position.z))
+
+        ativa_garra(cubo.identifier.data)
+        rospy.sleep(3)
+
+        #Vai ate o destino
+        voar([origem[0], origem[1], 2.0])
+        rospy.sleep(3)
+        voar([destino[0], destino[1], 2.5])
+        rospy.sleep(3)
+        voar([destino[0],destino[1],0.8])
+        rospy.sleep(2)
+        #ajustaPonto([destino[0],destino[1],0.8])
+
+
+        #Solta o cubo
+        desativa_garra(cubo.identifier.data)
+        rospy.sleep(3)
+        voar([destino[0]+0.2,destino[1]+0.2,0.5])
+
+        publicaProcessado(cubo)
+
+        cubo = base_cubo()
+        if(cubo is None):
+            if(len(bases) == 0):
+                break
+
+            baseOrigem = bases[0]
+            origem = ChecaPose(bases[0])
+            voar(origem)
+            voar([origem[0]+0.2,origem[1]+0.2,0.5])
+            #ajustaPonto([origem[0]+0.2,origem[1]+0.2,0.5])
+            cubo = base_cubo()
+        else:
+            origem = destino
+            baseOrigem = baseDestino
+            
+
+        
+def ajustaPonto(ponto):
+    rospy.wait_for_service('/uav1/control_manager/switch_controller')
+    proxy = rospy.ServiceProxy('/uav1/control_manager/switch_controller', String)
+    req = String._request_class()
+    
+    req.value = "Se3Controller"
+    proxy(req)
+
+    rospy.sleep(1)
+
+    voar(ponto)
+
+    rospy.sleep(3)
+
+    req.value = "MpcController"
+    proxy(req)
+
+    rospy.sleep(1)
+
+         
 
 
 
-def base_cubo(base):
+def base_cubo():
+    """!
+        Solicita e retorna o primeiro cubo nao processado detectado
+
+        Retorno:
+            @return Object do cubo detectado
+    """
     rospy.wait_for_service('get_object')
     a = rospy.ServiceProxy('get_object', GetObject)
     rospy.sleep(5)
     req = GetObject._request_class()
     
+    
     req.identifier.type.data = Identifier.TYPE_PACOTE
+    req.identifier.state.data = Identifier.STATE_NOPROCESSADO
+
     response = a(req)
     lista = response.list
     #print(lista)
@@ -126,16 +252,31 @@ def base_cubo(base):
         info = [cuboLetra,cuboPose]
         #print('info',info)
         #bases_atuais.append(cuboLetra)
-        return(info)
-    #print(bases_atuais,'bases')   
+
+    #print(bases_atuais,'bases')  
+
+    if(len(lista) != 0):
+        return lista[0]
+    else:
+        return None 
+
 
 def ChecaPose(i):
+    """!
+        Checa qual pose o cubo deve ir
+
+        Parametros:
+            @param i: A letra do cubo
+        
+        Retorno:
+            @return destino: Lista com a posicao [x,y,z] para onde o cubo deve ir
+    """
     destino =[]
-    A = [4.25,-2,2.5]
+    C = [4.25,-2,2.5]
     B = [5.25,0,2.5]
-    C = [1.25,-3,2.5]
-    D = [3.25,-0.08,2.5]
-    E = [0.25,-6,2.5]
+    A = [1.25,-3,2.5]
+    E = [3.25,-0.08,2.5]
+    D = [0.25,-6,2.5]
 
     if i == 'A':
         destino = A
@@ -152,29 +293,22 @@ def ChecaPose(i):
     return(destino)
 
 def publicaProcessado(obj):
+    """!
+        Publica ao mapa indicando que um objeto foi processado
+        
+        Parametros:
+            @param obj: Objecto com o objeto a ser alterado no mapa
+    """
     obj.identifier.state.data = Identifier.STATE_PROCESSADO
     pubObj.publish(obj)
-
-def carrega_cubo(caminho):
-    for i in caminho:
-        base = i[0]
-        letra = i[2]
-        destino = i[1]
-        voar(base)
-        rospy.sleep(3)
-        altura_safe = [base[0]+0.2,base[1]+0.2,0.6]
-        voar(altura_safe)
-        rospy.sleep(8)
-        ativa_garra(letra)
-        rospy.sleep(8)
-        voar(destino)
-        altura_safe2 = [destino[0]+0.2,destino[1]+0.2,0.8]
-        voar(altura_safe2)
-        rospy.sleep(8)
-        desativa_garra(letra)
-        rospy.sleep(8)
         
 def desativa_garra(letra):
+    """!
+        Desfaz o link entre o drone e o pacote
+
+        Parametros:
+            letra: letra do pacote
+    """
     rospy.wait_for_service('/link_attacher_node/detach')
     garra = rospy.ServiceProxy('/link_attacher_node/detach',Attach)
 
@@ -190,7 +324,12 @@ def desativa_garra(letra):
 
 
 def ativa_garra(letra):
-    print(letra)
+    """!
+        Cria o link entre o drone e o pacote
+
+        Parametros:
+            letra: letra do pacote
+    """
     rospy.wait_for_service('/link_attacher_node/attach')
     garra = rospy.ServiceProxy('/link_attacher_node/attach',Attach)
 
@@ -203,6 +342,9 @@ def ativa_garra(letra):
     garra(req) 
 
 def pousar():
+    """!
+       Pousa o drone na posicao atual
+    """
     print('P')
     rospy.wait_for_service('/uav1/uav_manager/land')
     um = rospy.ServiceProxy('/uav1/uav_manager/land', Trigger)
@@ -221,9 +363,15 @@ if __name__ == '__main__':
     try:
         pubObj = rospy.Publisher('objeto_detectado',Object, queue_size=10)
         velocidade()
-        lista = ReqPontos() 
-        caminho = separa_lista(lista)
-        carrega_cubo(caminho)
+
+        #Se o codigo falhar, finaliza voltando ate a base costeira
+        try:
+            lista = ReqPontos() 
+            caminho = separa_lista3(lista)
+            #carrega_cubo(caminho)
+        except:
+            pass
+
         base_costeira = [0,0,2.5]
         voar(base_costeira)
         rospy.sleep(3)
@@ -235,6 +383,9 @@ if __name__ == '__main__':
     except rospy.ROSInternalException:
         pass    
       
+
+
+
 
 
 
