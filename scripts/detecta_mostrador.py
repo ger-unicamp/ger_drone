@@ -293,7 +293,7 @@ def recebeImagem(msg):
 
         img = rotacionaImagem(img)
 
-        if(img == None):
+        if(img is None):
             continue
 
         _, th = cv.threshold(cv.cvtColor(img,cv.COLOR_BGR2GRAY),100,255,cv.THRESH_BINARY)
