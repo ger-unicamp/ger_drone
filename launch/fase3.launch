@@ -5,6 +5,10 @@
     
     <node name="fase3" pkg="ger_drone" type="fase3.py" ns="/ger_drone" />
     <node name="led" pkg="ger_drone" type="led_simulado.py" ns="/ger_drone"/>
-
+    
+    <node name="detecta_mostrador" pkg="ger_drone"  type="detecta_mostrador.py" ns="/ger_drone" output="screen">
+        <remap from="image_rect_color" to="/uav1/bluefox_optflow/image_rect_color"/>
+        <remap from="camera_info" to="/uav1/bluefox_optflow/camera_info"/>
+    </node>
 
 </launch>
