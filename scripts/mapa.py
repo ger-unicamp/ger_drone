@@ -47,6 +47,15 @@ RCameraDrone = Rotation.from_quat(RCameraDrone).as_dcm()
 def recebeObjeto(msg):
     global indiceMaximo
 
+    # Se objeto retornar com indice != -1, verificar se o tipo bate com o objeto ja na lista, e atualizar o estado
+    if(msg.identifier.index.data != -1):
+        for i in objetos:
+            if(i.identifier.index.data == msg.identifier.index.data):
+                if(i.identifier.type.data == msg.identifier.type.data):
+                    i.identifier.state.data = msg.identifier.state.data
+                    i.pose = msg.pose
+                return
+
     if atualizaMapa == False:
         return
 
@@ -81,15 +90,6 @@ def recebeObjeto(msg):
         return
 
 
-
-    # Se objeto retornar com indice != -1, verificar se o tipo bate com o objeto ja na lista, e atualizar o estado
-    if(msg.identifier.index.data != -1):
-        for i in objetos:
-            if(i.identifier.index.data == msg.identifier.index.data):
-                if(i.identifier.type.data == msg.identifier.type.data):
-                    i.identifier.state.data = msg.identifier.state.data
-                    i.pose = msg.pose
-                return
 
 
     r = Rotation.from_dcm(RObjWorld)
@@ -191,6 +191,7 @@ def afinaLista():
     bases = []
     sensores = []
     cubos = []
+    mostradores = []
 
     k = 0
 
@@ -227,7 +228,8 @@ def afinaLista():
                         existe = True
                         break
                 
-            elif(objetos[k].identifier.type.data == Identifier.TYPE_PACOTE and
+            elif((objetos[k].identifier.type.data == Identifier.TYPE_PACOTE or 
+                    objetos[k].identifier.type.data == Identifier.TYPE_MOSTRADOR) and
                 novaLista[i].identifier.type.data == Identifier.TYPE_BASE):
                 
                 if(abs(novaLista[i].pose.position.x-objetos[k].pose.position.x) <= 0.5 and
@@ -248,6 +250,8 @@ def afinaLista():
                 sensores.append(objetos[k])
             elif (tipo == Identifier.TYPE_PACOTE):
                 cubos.append(objetos[k])
+            elif (tipo == Identifier.TYPE_MOSTRADOR):
+                mostradores.append(objetos[k])
             
             k += 1
 
@@ -441,6 +445,77 @@ def afinaLista():
                     del cubos[k]
                 else:
                     k += 1
+
+    nMostrador = len(mostradores)
+
+    if nMostrador != 0:
+        while True:
+            if len(mostradores) == 0:
+                break
+
+            nInlierMelhor = 0
+            melhor = 0
+            poseMediaMelhor = [0,0]
+
+            for j in range(nIteracao):
+                index = int(np.random.rand(1)[0]*len(mostradores))
+                
+
+                pose = np.array([mostradores[index].pose.position.x,mostradores[index].pose.position.y])
+                data = mostradores[index].identifier.data
+                nInlier =0
+                poseMedia = [0,0]
+
+                for k in range(len(mostradores)):
+                    poseTeste = np.array([mostradores[k].pose.position.x,mostradores[k].pose.position.y])
+                    if(np.linalg.norm(pose-poseTeste) < 1.0 and mostradores[k].identifier.data == data):
+                        nInlier += 1
+                        poseMedia[0] += poseTeste[0]
+                        poseMedia[1] += poseTeste[1]
+
+                if(nInlier > nInlierMelhor):
+                    nInlierMelhor = nInlier
+                    melhor = index
+
+                    poseMediaMelhor[0] = poseMedia[0] / nInlier
+                    poseMediaMelhor[1] = poseMedia[1] / nInlier
+
+            pose = np.array([mostradores[melhor].pose.position.x,mostradores[melhor].pose.position.y])
+            
+            mostradores[melhor].pose.position.x = poseMediaMelhor[0]
+            mostradores[melhor].pose.position.y = poseMediaMelhor[1]
+
+            novaLista.append(mostradores[melhor])
+            novoFixo.append(True)
+            
+            k = 0
+
+            texto = [mostradores[melhor].identifier.data]
+            nOcorrencia = [1]
+
+            while(k < len(mostradores)):
+                poseTeste = np.array([mostradores[k].pose.position.x,mostradores[k].pose.position.y])
+                if(np.linalg.norm(pose- poseTeste) < 1.0 and mostradores[k].identifier.data == data):
+                    ocorreu = False
+                    for m in range(len(texto)):
+                        if(mostradores[k].identifier.data == texto[m]):
+                            nOcorrencia[m] += 1
+                            ocorreu = True
+
+                    if not ocorreu:
+                        texto.append(mostradores[k].identifier.data)
+                        nOcorrencia.append(1)
+                    
+                    del mostradores[k]
+                else:
+                    k += 1
+
+            maximo = 0
+            for m in range(len(texto)):
+                if(nOcorrencia[m]>nOcorrencia[maximo]):
+                    maximo = m
+            
+            novaLista[len(novaLista)-1].identifier.data = texto[maximo]
 
     objetos = novaLista
     fixo = novoFixo

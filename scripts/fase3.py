@@ -11,10 +11,11 @@ from mrs_msgs.srv import String
 from mrs_msgs.msg import PositionCommand, ControlManagerDiagnostics
 from std_srvs.srv import SetBool
 
-from ger_drone.msg import Identifier, object
+from ger_drone.msg import Identifier, Object, LedColor
 from ger_drone.srv import GetObject
 
 import numpy as np
+check = False
 
 def ReqPontos():
     rospy.wait_for_service('get_object')
@@ -25,7 +26,7 @@ def ReqPontos():
     requ.identifier.type.data = Identifier.TYPE_BASE
 
     response = a(requ)
-    lista = responde.lista
+    lista = response.list
 
     rospy.wait_for_service('/ger_drone/set_atualiza_mapa')
     proxy = rospy.ServiceProxy('/ger_drone/set_atualiza_mapa', SetBool)
@@ -45,12 +46,13 @@ def ReqPontos():
 
 def ReqMostrador():
     rospy.wait_for_service('get_object')
-    a = rospy.ServiceProxy('get_object', GetObject)
+    proxy = rospy.ServiceProxy('get_object', GetObject)
     requ = GetObject._request_class()
 
     requ.identifier.type.data = Identifier.TYPE_MOSTRADOR
+    requ.identifier.state.data = Identifier.STATE_NOPROCESSADO
 
-    response = requ(a)
+    response = proxy(requ)
     obj = response.list
 
     return obj
@@ -63,17 +65,13 @@ def Voar(a):
 
     reqc = ReferenceStampedSrv._request_class()
 
-    x = a[0]
-    y = a[1]
-    z = 2.0
-    lista = [x,y,z]
-    reqc.reference.position.x = x
-    reqc.reference.position.y = y
-    reqc.reference.position.z = z
+    reqc.reference.position.x = a[0]
+    reqc.reference.position.y = a[1]
+    reqc.reference.position.z = a[2]
     reqc.reference.heading = 0
     tres(reqc)
 
-    checar(lista)
+    checar(a)
 
 
 def checar(a):
@@ -96,7 +94,7 @@ def PreparaPouso(j):
     a = [j[0],j[1],0.5]
     Voar(a)
     ajustaPonto(a)
-
+    lista = [x,y,z]
 def recebeDiagnostico(msg):
     global chegou
     if msg.tracker_status.have_goal == False:
@@ -104,6 +102,21 @@ def recebeDiagnostico(msg):
     else:
         chegou = False
 
+def compara(msg,w):
+    global check 
+    posx = msg.position.x
+    posy = msg.position.y
+    posz = msg.position.z
+
+    tMsg = np.array([w[0],w[1]], np.float32)
+    tDrone = np.array([posx, posy], np.float32)
+
+    if (np.linalg.norm(tMsg-tDrone)<0.01):
+        check = True
+    else:
+        check = False
+    
+    return  
 
 def ajustaPonto(ponto):
     rospy.wait_for_service('/uav1/control_manager/switch_controller')
@@ -124,20 +137,20 @@ def ajustaPonto(ponto):
 
     rospy.sleep(1)
 
-def ativaLed(cor):
+def ativaLed(cor, tempo):
 
     msg = LedColor()
     msg.r = cor[0]
     msg.g = cor[1]
     msg.b = cor[2]
-    pub.publish(msg)
-    rospy.sleep(15)
+    pubLed.publish(msg)
+    rospy.sleep(tempo)
     
     msg = LedColor()
     msg.r = 0
     msg.g = 0
     msg.b = 0
-    pub.publish(msg)
+    pubLed.publish(msg)
 
 def pousar():
    print('P')
@@ -147,16 +160,19 @@ def pousar():
    um(reqa)
 
 def Sinal(gas,ajuste):
-    if (gas<=45) or (gas>=55):
-        ativaLed([255,0,0])
+    ativaLed([255,0,255], 10)
+
+    if (gas>=45) and (gas<=55):
+        ativaLed([0,255,0], 10)
     else:
-        ativaLed([0,255,0])
-    
-    rospy.sleep(45)
-    if (ajuste<=-5) or (ajuste>=5):
-        ativaLed([255,0,0])
+        ativaLed([255,0,0], 10)
+
+    rospy.sleep(32)
+
+    if (ajuste>=-5) and (ajuste<=5):
+        ativaLed([0,255,0], 10)
     else:
-        ativaLed([0,255,0])
+        ativaLed([255,0,0], 10)
 
 
 def publicaProcessado(obj):
@@ -168,6 +184,7 @@ if __name__ == '__main__':
     rospy.init_node('fase3', anonymous="True")
 
     pubObj = rospy.Publisher('objeto_detectado',Object, queue_size=10)
+    pubLed = rospy.Publisher('led_color', LedColor, queue_size=10)
 
     try:
         Velocidade()
@@ -175,13 +192,22 @@ if __name__ == '__main__':
 
         for i in pontos:
             Voar([i[0],i[1],2.0])
+            rospy.sleep(2)
+            Voar([i[0],i[1],0.5])
+            ajustaPonto([i[0],i[1],0.5])
+            rospy.sleep(10)
+
+            
             lista = ReqMostrador()
-            obj = lista[-1]
-            stri = obj.identifier.data
-            val = stri.split(" ")
-            sinal(val[0],val[1])
-            publicaProcessado(obj)
-            rospy.sleep(5)
+
+            for obj in lista:
+                stri = obj.identifier.data
+                print(stri+" |Pose: "+": "+ str(obj.pose.position.x)+ " "
+                    +str(obj.pose.position.y)+" "+str(obj.pose.position.z))
+                val = stri.split(" ")
+                Sinal(int(val[0]),int(val[1]))
+                publicaProcessado(obj)
+                rospy.sleep(5)
 
         Voar([0.0,0.0,1.0])
         pousar()

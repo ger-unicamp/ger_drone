@@ -286,12 +286,18 @@ def recebeImagem(msg):
     if(img is None):
         return
 
-    quadrados = procuraQuadrado(img)
+    quadrados = processaImagem(img)
+
+    if(quadrados is None):
+        return
 
     if len(quadrados) == 0:
         return
 
     for quad in quadrados:
+        if(len(quad) != 4):
+            continue
+
         img = transformaImagem(img, quad)
 
         img = rotacionaImagem(img)
@@ -325,10 +331,12 @@ def recebeImagem(msg):
         tCamObj = []
 
 
+        pontoImagem = np.asarray(quad, dtype=np.float32)
+
         if(cv.__version__[0] == "4"):
-            a, RCamObj, tCamObj, _ = cv.solvePnPRansac(pontoReal,quad , K, np.zeros((5,1)))
+            a, RCamObj, tCamObj, _ = cv.solvePnPRansac(pontoReal,pontoImagem , K, np.zeros((5,1)))
         else:
-            pontoI = np.expand_dims(quad, 1)
+            pontoI = np.expand_dims(pontoImagem, 1)
             pontoR = np.expand_dims(pontoReal, 1)
             a, RCamObj, tCamObj, _ = cv.solvePnPRansac(pontoR,pontoI , K, np.zeros((5,1), dtype=np.float32))
 
