@@ -104,11 +104,25 @@ def separa_lista(lista):
         rotina.append(infos)
         print(infos)
     print(rotina) 
-    return(rotina)   
+    return(rotina) 
+
+def separa_lista2(lista):
+    base1 = [lista[0].pose.position.x, lista[0].pose.position.y,2.5]
+    voar(base1)
+    rospy.sleep(3)
+    base1[2] = 0.5
+    voar(base1)
+    rospy.sleep(5)
+
+    cubo = base_cubo()
+    proximo = cubo.identifier.data
+
+
+def proximo(s)
 
 
 
-def base_cubo(base):
+def base_cubo():
     rospy.wait_for_service('get_object')
     a = rospy.ServiceProxy('get_object', GetObject)
     rospy.sleep(5)
@@ -126,16 +140,17 @@ def base_cubo(base):
         info = [cuboLetra,cuboPose]
         #print('info',info)
         #bases_atuais.append(cuboLetra)
-        return(info)
-    #print(bases_atuais,'bases')   
+
+    #print(bases_atuais,'bases')  
+    return lista[0] 
 
 def ChecaPose(i):
     destino =[]
-    A = [4.25,-2,2.5]
+    C = [4.25,-2,2.5]
     B = [5.25,0,2.5]
-    C = [1.25,-3,2.5]
-    D = [3.25,-0.08,2.5]
-    E = [0.25,-6,2.5]
+    A = [1.25,-3,2.5]
+    E = [3.25,-0.08,2.5]
+    D = [0.25,-6,2.5]
 
     if i == 'A':
         destino = A
@@ -221,6 +236,7 @@ if __name__ == '__main__':
     try:
         pubObj = rospy.Publisher('objeto_detectado',Object, queue_size=10)
         velocidade()
+
         lista = ReqPontos() 
         caminho = separa_lista(lista)
         carrega_cubo(caminho)

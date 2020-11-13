@@ -3,7 +3,7 @@
 -->
 <launch>
 
-    <node name="fase4" pkg="ger_drone" type="fase4.py" ns="/ger_drone" />
+    <node name="fase4" pkg="ger_drone" type="fase4.py" ns="/ger_drone" output="screen"/>
     <node name="led" pkg="ger_drone" type="led_simulado.py" ns="/ger_drone"/>
     
     <node name="detecta_cubo" pkg="ger_drone" type="detecta_cubo.py" ns="/ger_drone" output="screen">

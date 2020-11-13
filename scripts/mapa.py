@@ -45,6 +45,7 @@ RCameraDrone = Rotation.from_quat(RCameraDrone).as_dcm()
 
 # Cria e insere objeto da mensagem na lista
 def recebeObjeto(msg):
+    global indiceMaximo
 
     if atualizaMapa == False:
         return
@@ -87,6 +88,7 @@ def recebeObjeto(msg):
             if(i.identifier.index.data == msg.identifier.index.data):
                 if(i.identifier.type.data == msg.identifier.type.data):
                     i.identifier.state.data = msg.identifier.state.data
+                    i.pose = msg.pose
                 return
 
 
@@ -120,6 +122,11 @@ def recebeObjeto(msg):
     novoObjeto.pose.orientation.w = quat[3]
 
     novoObjeto.identifier.data = msg.identifier.data
+
+
+    indiceMaximo += 1
+
+    novoObjeto.identifier.index.data = indiceMaximo
 
     fixo.append(False)
     objetos.append(novoObjeto)
@@ -400,7 +407,7 @@ def afinaLista():
                 
 
                 pose = np.array([cubos[index].pose.position.x,cubos[index].pose.position.y])
-                data = cubos[index]
+                data = cubos[index].identifier.data
                 nInlier =0
                 poseMedia = [0,0]
 
@@ -417,9 +424,6 @@ def afinaLista():
 
                     poseMediaMelhor[0] = poseMedia[0] / nInlier
                     poseMediaMelhor[1] = poseMedia[1] / nInlier
-
-            if ((float(nInlierMelhor )/ float(nCubos)) < 0.2):
-                break
 
             pose = np.array([cubos[melhor].pose.position.x,cubos[melhor].pose.position.y])
             
@@ -504,6 +508,7 @@ def appendObjeto(objeto):
             
 
 def recuperaArquivo():
+    global indiceMaximo
     # Gera uma lista de objetos com os dados de "mapa_gerado".
     
     try:
@@ -530,6 +535,9 @@ def recuperaArquivo():
                 novoObjeto.pose.orientation.z = float(row[8])
                 novoObjeto.pose.orientation.w = float(row[9])
                 novoObjeto.identifier.data = row[10]
+
+                if(novoObjeto.identifier.index.data > indiceMaximo):
+                    indiceMaximo = novoObjeto.identifier.index.data
 
                 # Adiciona o objeto na lista global "objetos"
                 objetos.append(novoObjeto)
@@ -596,7 +604,7 @@ def imprimeMapa():
 def insereBasesSuspensas():
     global objetos, fixo
     base1 = Object()
-    base1.identifier.data="E"
+    base1.identifier.data="D"
     base1.identifier.index.data=0
     base1.identifier.state.data=Identifier.STATE_NOPROCESSADO
     base1.identifier.type.data=Identifier.TYPE_BASE
@@ -614,7 +622,7 @@ def insereBasesSuspensas():
     fixo.append(True)
 
     base1 = Object()
-    base1.identifier.data="D"
+    base1.identifier.data="E"
     base1.identifier.index.data=1
     base1.identifier.state.data=Identifier.STATE_NOPROCESSADO
     base1.identifier.type.data=Identifier.TYPE_BASE
