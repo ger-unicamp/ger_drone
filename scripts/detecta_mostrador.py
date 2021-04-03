@@ -41,6 +41,10 @@ def recebeInfo(msg):
 
 
 def procuraQuadrado(mascara):
+    """!
+        Definida em detecta_base
+    """
+    
     kernel = np.ones((5,5),np.uint8)
     
     bordas = cv.Canny(mascara, 100, 500, kernel)
@@ -96,6 +100,17 @@ def procuraQuadrado(mascara):
     return quadrados
 
 def processaImagem(img):
+    """!
+    Parâmetros:
+        @param img (np.array) - imagem a ser processada.
+    Retorno:
+        @returns Verificação da presença de quadrados na imagem filtrada.
+
+    Realiza um threshold de uma imagem a fim de aplicar o filtro closing. Em
+    seguida, aplica a função de identificar a presença de um quadrado na imagem
+    filtrada.
+    """
+    
     hsv = cv.cvtColor(img, cv.COLOR_BGR2HSV)
     hls = cv.cvtColor(img, cv.COLOR_BGR2HLS)
 
@@ -126,6 +141,9 @@ def processaImagem(img):
 
 #Aplica uma transformacao projetiva na imagem para colocar o mostrador em evidencia e paralelo
 def transformaImagem(img, quad):
+    """!
+        ##ELTON##
+    """
 
     pts1 = np.float32(quad[:4])
     pts1 = np.asarray(pts1, dtype = np.float32)
@@ -164,6 +182,15 @@ def transformaImagem(img, quad):
     return img2
 
 def rotacionaImagem(img):
+    """!
+    Parâmetro:
+        @param img (np.array) - Imagem lida para análise
+    Identifica a inclinação do mostrador em relação à câmera de forma a deixar
+    seus dígitos no formato de leitura da esquerda para a direita e de cima
+    para baixo. Realiza rotações da imagem até que sua inclinação esteja de
+    acordo com tais condições para posterior extração de dígitos.
+    """
+    
     template = percentual[:,0:45]
 
     w = template.shape[1]
@@ -224,6 +251,19 @@ def rotacionaImagem(img):
     return img
 
 def extraiDigitos(dig):
+    """!
+    Parâmetro:
+        @param dig (np.array) - lista de imagens de dígitos a serem analisados.
+    Retorno:
+        @returns Dígito obtido
+
+    Fragmenta uma imagem de um dígito em uma forma de um display de 7 segmentos.
+    Analisa quais os segmentos que estão "apagados" ou "acesos" e, baseado nisto,
+    determina qual o dígito em questão. É um método pouco eficiente por depender
+    de coordenadas em uma imagem, devendo ser otimizado para que reconheça
+    formatos em vez disso.
+    """
+    
     ret,dig = cv.threshold(dig,127,255, cv.THRESH_BINARY)
     parte0 = dig[6:18,22:80]
     parte1 = dig[15:50,5:25]
@@ -270,6 +310,14 @@ def extraiDigitos(dig):
         return 9
 
 def converte_coord(valor):
+    """!
+    Parâmetros: ##ELTON (VERIFICAR)##
+    Retorno:
+        @returns Imagem nas novas coordenadas.
+        
+    Realiza uma transformação de coordenadas em uma imagem.
+    """
+
     pts1 = ([0,0],[24,0],[24,44],[0,44])
     pts1 = np.asarray(pts1, dtype = np.float32)
     pts2 = np.float32([[0,0],[100,0], [100,100], [0,100]])

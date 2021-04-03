@@ -1,9 +1,5 @@
 #!/usr/bin/env python
 
-"""!
-    Este é um teste de documentação
-    """
-
 import rospy
 import rospkg
 
@@ -32,6 +28,15 @@ imgDraw = np.zeros((3,3,1))
 
 
 def imprimeTodosQuadrados(quadrados, img):
+    """!
+        Parâmetros:
+            @param quadrados(int32) - coordenadas dos vértices dos quadrados na imagem.
+            @param img(np.array) - imagem lida pela câmera
+
+        Desenha em uma imagem previamente analisada os círculos indicando os
+        quadrados observados.
+    """
+    
     global imgDraw
     imgDraw = img.copy()
     for quad in quadrados:
@@ -65,7 +70,22 @@ def recebeInfo(msg):
 def errorHandler(status, func_name, err_msg, dile_name, line, user_data):
     pass
 
+
 def procuraQuadrado(mascara):
+    """!
+        Parâmetros:
+            @param mascara(np.array) - imagem previamente filtrada.
+        Retorno:
+            @returns Coordenadas dos vértices do quadrado obtido.
+        Função que busca, identifica, localiza e define as coordenadas
+        de um quadrado caso seja identificado em uma figura.
+        Define os contornos presentes na imagem, localiza os vértices dos
+        contornos, desenvolve curvas ligando tais vértices (cv.approxPoly)
+        e verifica a similaridade com uma reta. Caso todos os vértices ligados
+        correspondam ao formato desejado, extrai as coordenadas de tais vértices
+        e aponta-os como o quadrado.
+    """
+        
     kernel = np.ones((5,5),np.uint8)
     
     bordas = cv.Canny(mascara, 100, 500, kernel)
@@ -149,6 +169,15 @@ def procuraQuadrado(mascara):
 
 
 def recebeImagem(msg):
+    """!
+        Parâmetro:
+            @param msg ##ELTON (VERIFICAR)##
+
+        Realiza a filtragem de uma imagem para cores pré-definidas; localiza os
+        vértices dos quadrados (se existirem); verifica as coordenadas do quadrado
+        relativa ao centro da imagem; estima a pose do quadrado.
+    """
+    
     img = converteImagem(msg)
 
     hsv = cv.cvtColor(img, cv.COLOR_BGR2HSV)
@@ -207,6 +236,9 @@ def recebeImagem(msg):
 
 
 def publicaBase(R, t):
+    """!
+        ##ELTON##
+    """
     msg = Object()
 
     msg.identifier.type.data = Identifier.TYPE_BASE
