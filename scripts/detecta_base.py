@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+"""!
+    Este é um teste de documentação
+    """
+
 import rospy
 import rospkg
 
@@ -25,6 +29,7 @@ pontoReal = np.array([[0.5,-0.5,0],
 
 
 imgDraw = np.zeros((3,3,1))
+
 
 def imprimeTodosQuadrados(quadrados, img):
     global imgDraw
