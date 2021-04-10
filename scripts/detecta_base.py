@@ -31,6 +31,7 @@ def imprimeTodosQuadrados(quadrados, img):
     """!
         Desenha em uma imagem previamente analisada os círculos indicando os
         quadrados observados.
+
         Parâmetros:
             @param quadrados(int32) - coordenadas dos vértices dos quadrados na imagem.
             @param img(np.array) - imagem lida pela câmera
@@ -57,7 +58,19 @@ def converteImagem(img):
 
 def inverteTransformacao(R, t):
     """!
-        ##ELTON##
+        Inverte uma transformação geométrica.
+
+        Se a transformação leva do sistema de coordena A para o B, 
+        o retorno será do sistema B para o A
+
+        Parâmetros:
+            @param R (np.darray 3x3) - Matriz de rotação
+            @param t (np.darray 3x1) - Vetor de translação
+
+        Retorno:
+            @returns RInverso (np.darray 3x3) - Matriz de rotação inversa
+            @returns tInverso (np.darray 3x1) - Vetor de translação inverso
+        
     """
     
     RInverso = np.transpose(R)
@@ -69,7 +82,12 @@ def inverteTransformacao(R, t):
 
 def recebeInfo(msg):
     """!
-        ##ELTON##
+        Recebe a mensagem com as informações da câmera
+
+        Extrai apenas a matriz de calibração
+
+        Parâmetros:
+            @param msg (CameraInfo) - informações da câmera
     """
     
 
@@ -90,6 +108,8 @@ def errorHandler(status, func_name, err_msg, dile_name, line, user_data):
 
 def procuraQuadrado(mascara):
     """!
+        Extrai os quadrados na máscara
+
         Função que busca, identifica, localiza e define as coordenadas
         de um quadrado caso seja identificado em uma figura.
         Define os contornos presentes na imagem, localiza os vértices dos
@@ -97,6 +117,7 @@ def procuraQuadrado(mascara):
         e verifica a similaridade com uma reta. Caso todos os vértices ligados
         correspondam ao formato desejado, extrai as coordenadas de tais vértices
         e aponta-os como o quadrado.
+
         Parâmetros:
             @param mascara(np.array) - imagem previamente filtrada.
         Retorno:
@@ -187,11 +208,14 @@ def procuraQuadrado(mascara):
 
 def recebeImagem(msg):
     """!
+        Recebe uma mensagem de imagem, extrai as bases e publica
+
         Realiza a filtragem de uma imagem para cores pré-definidas; localiza os
         vértices dos quadrados (se existirem); verifica as coordenadas do quadrado
         relativa ao centro da imagem; estima a pose do quadrado.
-        Parâmetro:
-            @param msg ##ELTON (VERIFICAR)##
+
+        Parâmetros:
+            @param msg (Image) - mensagem da imagem
         
     """
     
@@ -254,7 +278,13 @@ def recebeImagem(msg):
 
 def publicaBase(R, t):
     """!
-        ##ELTON##
+        Publica uma base
+
+        Recebe a informação da posição da base e publica um objeto detectado nesse lugar
+
+        Parâmetros:
+            @param R (list/np.darray 3x3) - matriz de rotação
+            @param t (list/np.darray 3x1) - vetor de translação
     """
     msg = Object()
 
