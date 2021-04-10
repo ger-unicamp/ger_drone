@@ -24,9 +24,31 @@ pontoReal = np.array([[5.5e-2, -5.5e-2, 0],
                     [-5.5e-2, -5.5e-2, 0]], dtype=np.float32)
 
 def converteImagem(img):
+    """!
+        Converte uma imagem fornecida pelo ROS para o formato do OpenCV
+
+        @todo Criar um módulo com essa função de apoio
+
+        Parâmetros:
+            @param img (np.array) - Imagem fornecida pelo ROS a ser convertida.
+
+        Retorno:
+            @returns Imagem no formato do OpenCV.
+    """
+
     return CvBridge().imgmsg_to_cv2(img, "bgr8")
 
-def recebeInfo(msg):  
+def recebeInfo(msg): 
+    """!
+        Recebe a mensagem com as informações da câmera
+        
+        Extrai apenas a matriz de calibração
+
+        @todo Criar um módulo com essa função de apoio
+
+        Parâmetros:
+            @param msg (CameraInfo) - informações da câmera
+    """ 
 
     global K
 
@@ -42,6 +64,8 @@ def recebeInfo(msg):
 
 def procuraQuadrado(mascara):
     """!
+        Procura o o quadrado do mostrador na imagem filtrada
+
         Função que busca, identifica, localiza e define as coordenadas
         de um quadrado caso seja identificado em uma figura.
         Define os contornos presentes na imagem, localiza os vértices dos
@@ -49,8 +73,10 @@ def procuraQuadrado(mascara):
         e verifica a similaridade com uma reta. Caso todos os vértices ligados
         correspondam ao formato desejado, extrai as coordenadas de tais vértices
         e aponta-os como o quadrado.
+
         Parâmetros:
             @param mascara(np.array) - imagem previamente filtrada.
+
         Retorno:
             @returns Coordenadas dos vértices do quadrado obtido.
     """
@@ -111,11 +137,15 @@ def procuraQuadrado(mascara):
 
 def processaImagem(img):
     """!
+        Recebe a mensagem de imagem, procura os mostradores e publica
+        
         Realiza um threshold de uma imagem a fim de aplicar o filtro closing. Em
         seguida, aplica a função de identificar a presença de um quadrado na imagem
         filtrada.
+        
         Parâmetros:
             @param img (np.array) - imagem a ser processada.
+
         Retorno:
             @returns Verificação da presença de quadrados na imagem filtrada.
 
@@ -149,10 +179,16 @@ def processaImagem(img):
 
     return quadrados
 
-#Aplica uma transformacao projetiva na imagem para colocar o mostrador em evidencia e paralelo
+
 def transformaImagem(img, quad):
     """!
-        ##ELTON##
+        Aplica uma transformação projetiva para colocar o mostrador em evidência
+        
+        Transforma os quatro cantos dele para os quatro cantos da imagem, tornando seus lados paralelos
+
+        Parâmetros:
+            img (np.darray) - Imagem em que o mostrador está
+            quad (np.darray 4x2) - Cantos do mostrador
     """
 
     pts1 = np.float32(quad[:4])
@@ -193,12 +229,18 @@ def transformaImagem(img, quad):
 
 def rotacionaImagem(img):
     """!
-    Identifica a inclinação do mostrador em relação à câmera de forma a deixar
-    seus dígitos no formato de leitura da esquerda para a direita e de cima
-    para baixo. Realiza rotações da imagem até que sua inclinação esteja de
-    acordo com tais condições para posterior extração de dígitos.
-    Parâmetro:
-        @param img (np.array) - Imagem lida para análise
+        Rotaciona o mostrador para ficar com a orientação correta de leitura
+
+        Identifica a inclinação do mostrador em relação à câmera de forma a deixar
+        seus dígitos no formato de leitura da esquerda para a direita e de cima
+        para baixo. Realiza rotações da imagem até que sua inclinação esteja de
+        acordo com tais condições para posterior extração de dígitos.
+        
+        Parâmetros:
+            @param img (np.array) - Imagem lida para análise
+
+        Retorno: 
+            @param img (np.array) - Imagem rotacionada
     
     """
     
@@ -263,15 +305,18 @@ def rotacionaImagem(img):
 
 def extraiDigitos(dig):
     """!
+        Extrai o dígito na imagem
+
         Fragmenta uma imagem de um dígito em uma forma de um display de 7 segmentos.
         Analisa quais os segmentos que estão "apagados" ou "acesos" e, baseado nisto,
         determina qual o dígito em questão. É um método pouco eficiente por depender
         de coordenadas em uma imagem, devendo ser otimizado para que reconheça
         formatos em vez disso.
+        
         Parâmetro:
             @param dig (np.array) - lista de imagens de dígitos a serem analisados.
         Retorno:
-            @returns Dígito obtido
+            @returns  dígito obtido (int)
 
     
     """
@@ -323,10 +368,10 @@ def extraiDigitos(dig):
 
 def converte_coord(valor):
     """!
-    Realiza uma transformação de coordenadas em uma imagem.
-    Parâmetros: ##ELTON (VERIFICAR)##
-    Retorno:
-        @returns Imagem nas novas coordenadas.
+        Redimensiona a imagem
+
+        Retorno:
+            @returns Imagem redimensionada
         
     """
 
@@ -339,6 +384,14 @@ def converte_coord(valor):
     return img2
 
 def recebeImagem(msg):
+    '''!
+        Recebe a mensagem com a imagem, procura os mostradores e publica
+
+        Parâmetros:
+            msg (Image): mensagem de imagem onde os mostradores serão procurados
+
+    '''
+
     global pontoReal
 
     img = converteImagem(msg)
@@ -409,6 +462,17 @@ def recebeImagem(msg):
         
 
 def publicaObj(R, t, data):
+    """!
+        Publica um mostrador
+
+        Recebe a informação da posição do mostrador e publica um objeto detectado nesse lugar
+
+        Parâmetros:
+            @param R (list/np.darray 3x3) - matriz de rotação
+            @param t (list/np.darray 3x1) - vetor de translação
+            @param data (int) - dígito que está no mostrador
+    """
+
     msg = Object()
 
     msg.identifier.data = data

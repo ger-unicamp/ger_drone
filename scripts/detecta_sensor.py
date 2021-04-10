@@ -25,10 +25,39 @@ pontoReal = np.array([[2.5e-2, -2.5e-2, 0],
 
 
 def converteImagem(img):
+    """!
+        Converte uma imagem fornecida pelo ROS para o formato do OpenCV
+
+        @todo Criar um módulo com essa função de apoio
+
+        Parâmetros:
+            @param img (np.array) - Imagem fornecida pelo ROS a ser convertida.
+        Retorno:
+            @returns Imagem no formato do OpenCV.
+    """
+
     return CvBridge().imgmsg_to_cv2(img, "bgr8")
 
 
 def inverteTransformacao(R, t):
+    """!
+        Inverte uma transformação geométrica.
+
+        Se a transformação leva do sistema de coordena A para o B, 
+        o retorno será do sistema B para o A
+
+        @todo Criar um módulo com essa função de apoio
+
+        Parâmetros:
+            @param R (np.darray 3x3) - Matriz de rotação
+            @param t (np.darray 3x1) - Vetor de translação
+
+        Retorno:
+            @returns RInverso (np.darray 3x3) - Matriz de rotação inversa
+            @returns tInverso (np.darray 3x1) - Vetor de translação inverso
+            
+    """
+
     RInverso = np.transpose(R)
 
     tInverso  = - np.matmul(RInverso, t)
@@ -37,7 +66,22 @@ def inverteTransformacao(R, t):
 
 #Procura quadrados na imagem usando uma mascara
 def procuraQuadrado(mascara):
-    """!Função descrita em detecta_base"
+    '''! 
+        Procura quadrados na imagem pré-processada
+
+
+        Função que busca, identifica, localiza e define as coordenadas
+        de um quadrado caso seja identificado em uma figura.
+        Define os contornos presentes na imagem, localiza os vértices dos
+        contornos, desenvolve curvas ligando tais vértices (cv.approxPoly)
+        e verifica a similaridade com uma reta. Caso todos os vértices ligados
+        correspondam ao formato desejado, extrai as coordenadas de tais vértices
+        e aponta-os como o quadrado.
+
+        Parâmetros:
+            @param mascara (np.darray) - imagem pré-processada
+    '''
+
     kernel = np.ones((5,5),np.uint8)
     
     bordas = cv.Canny(mascara, 100, 500, kernel)
@@ -91,9 +135,21 @@ def procuraQuadrado(mascara):
     
     return quadrados
 
-#Estima a pose do sensor a partir de seus cantos na imagem
 def estimaPoseSensor(quad):
+    '''!
+        Estima a pose do sensor
 
+        Utiliza o solvePnP, junto da posição do sensor na imagem e no mundo métrico, 
+        para estima a sua posição em relação ao frame da câmera
+
+        Parâmetros:
+            @param quad (np.darray) - Posição dos cantos do sensor na imagem
+
+        Retorno:
+            @returns RCamObj (np.darray 3x3) - matriz de rotação do sistema da câmera para o objeto
+            @returns tCamObj (np.darray 3x1) - vetor de rotação do sistema da câmera para o objeto
+
+    '''
 
     a = 0
     RCamObj = []
@@ -114,10 +170,12 @@ def estimaPoseSensor(quad):
     return RCamObj, tCamObj
 
 
-#Recebe a imagem, procura os quadrados e publica
 def recebeImagem(msg):
     """!
-        Função descrita em 'detecta_base'
+        Recebe uma mensagem de imagem, procura os sensores e publica
+
+        Parâmetros:
+            @param msg (Image) - mensagem da imagem
     """
     
     img = converteImagem(msg)
@@ -157,10 +215,17 @@ def recebeImagem(msg):
 
     #rospy.loginfo("Detectados "+str(len(quadVerm)+len(quadVerde))+" sensores")
 
-#@param cor - True se verde, False se vermelho
+
 def publicaSensor(R, t, cor):
     """!
-        ##ELTON##
+        Publica o sensor detectado
+
+        Recebe a posição e dados (cor) dele para criar e publicar o objeto detectado
+
+        Parâmetros:
+            @param R (list/np.darray 3x3) - matriz de rotação
+            @param t (list/np.darray 3x1) - vetor de translação
+            @param cor - True se verde, False se vermelho
     """
 
     msg = Object()
@@ -190,7 +255,17 @@ def publicaSensor(R, t, cor):
 
     pubSensor.publish(msg)
 
-def recebeInfo(msg):  
+def recebeInfo(msg):
+    """!
+        Recebe a mensagem com as informações da câmera
+        
+        Extrai apenas a matriz de calibração
+
+        @todo Criar um módulo com essa função de apoio
+
+        Parâmetros:
+            @param msg (CameraInfo) - informações da câmera
+    """  
 
     global K
 
@@ -204,6 +279,16 @@ def recebeInfo(msg):
     K = np.array(K,dtype=np.float32)
 
 def imprimeTodosQuadrados(quadrados, img):
+    '''!
+        Desenha os cantos quadrados na imagem e armazena em imgDraw
+
+        @todo Possivelmente remover essa função
+
+        Parâmetros:
+            @param quadrados (list/np.darray nx4x2) - Lista com cantos dos quadrados
+            @param img - imagem onde deverá ser desenhado os cantos
+    '''
+
     global imgDraw
     imgDraw = img.copy()
     for quad in quadrados:

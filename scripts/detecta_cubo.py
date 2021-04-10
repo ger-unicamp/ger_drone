@@ -27,17 +27,33 @@ def converteImagem(img):
     """!
         Converte uma imagem fornecida pelo ROS para o formato do OpenCV
 
+        @todo Criar um módulo com essa função de apoio
+
         Parâmetros:
             @param img (np.array) - Imagem fornecida pelo ROS a ser convertida.
         Retorno:
             @returns Imagem no formato do OpenCV.
     """
     
-        return CvBridge().imgmsg_to_cv2(img, "bgr8")
+    return CvBridge().imgmsg_to_cv2(img, "bgr8")
 
 def inverteTransformacao(R, t):
     """!
-        ##ELTON##
+        Inverte uma transformação geométrica.
+
+        Se a transformação leva do sistema de coordena A para o B, 
+        o retorno será do sistema B para o A
+
+        @todo Criar um módulo com essa função de apoio
+
+        Parâmetros:
+            @param R (np.darray 3x3) - Matriz de rotação
+            @param t (np.darray 3x1) - Vetor de translação
+
+        Retorno:
+            @returns RInverso (np.darray 3x3) - Matriz de rotação inversa
+            @returns tInverso (np.darray 3x1) - Vetor de translação inverso
+        
     """
     
     RInverso = np.transpose(R)
@@ -49,7 +65,14 @@ def inverteTransformacao(R, t):
 
 def recebeInfo(msg):
     """!
-        ##ELTON##
+        Recebe a mensagem com as informações da câmera
+        
+        Extrai apenas a matriz de calibração
+
+        @todo Criar um módulo com essa função de apoio
+
+        Parâmetros:
+            @param msg (CameraInfo) - informações da câmera
     """
     
 
@@ -66,7 +89,14 @@ def recebeInfo(msg):
 
 def recebeImagem(msg):
     """!
-        ##ELTON##
+        Recebe uma mensagem de imagem, extrai os QR codes e publica
+
+        Utiliza o pacote pyzbar para extrair os QR codes, 
+        e com as bordas utiliza o solvePnP para estimar a posição
+
+        Parâmetros:
+            @param msg (Image) - mensagem da imagem
+        
     """
     
     global pontoReal
@@ -111,7 +141,15 @@ def recebeImagem(msg):
 
 def publicaCubo(R, t, letra):
     """!
-        ##ELTON##
+        Publica o QR code
+
+        Recebe a posição e dados (letra) dele para criar e publicar o objeto detectado
+
+        @todo Criar um módulo com essa função de apoio e generalizar ela
+
+        Parâmetros:
+            @param R (list/np.darray 3x3) - matriz de rotação
+            @param t (list/np.darray 3x1) - vetor de translação
     """
     
     msg = Object()
