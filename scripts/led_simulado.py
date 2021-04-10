@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+'''!
+    Nó para simular um LED
+'''
+
 import rospy
 
 import cv2 as cv
@@ -13,12 +17,26 @@ cor = [0,0,0]
 img = np.ones((500,500,3),np.uint8)*255
 
 def recebeCor(msg):
+    '''!
+        Recebe uma mensagem com a cor que o led precisa mostra
+
+        Parâmetros:
+            @param msg (LedColor): mensagem 
+    '''
+
     global cor
     cor[2] = msg.r
     cor[1] = msg.g
     cor[0] = msg.b
 
 def alteraLed(cor):
+    '''!
+        Altera a cor do LED sendo mostrado
+        
+        Parâmetros:
+            @cor (list/np.darray 3x1): cor BGR que deve ser mostrada
+    '''
+
     cv.circle(img, (255-1,255-1), 255, cor, -1)
     
 
