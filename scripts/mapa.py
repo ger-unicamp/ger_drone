@@ -43,8 +43,13 @@ RCameraDrone = Rotation.from_quat(RCameraDrone).as_dcm()
 
 
 
-# Cria e insere objeto da mensagem na lista
 def recebeObjeto(msg):
+    """!
+        Cria e insere o objeto da mensagem na lista
+        
+        Parametros:
+            @param msg: Mensagem recebida
+    """
     global indiceMaximo
 
     # Se objeto retornar com indice != -1, verificar se o tipo bate com o objeto ja na lista, e atualizar o estado
@@ -134,6 +139,12 @@ def recebeObjeto(msg):
 
 
 def recebeOdometria(msg):
+    """!
+        Recebe os dados da odometria, salva a posição, define se o drone esta muito rapido.
+
+        Parametros:
+            @param msg: Mensagem recebida
+    """
     global tDroneWorld, RDroneWorld, muitoRapido
 
 
@@ -154,6 +165,11 @@ def recebeOdometria(msg):
 
 
 def logObjetos():
+    """!
+        Imprime um log no ROS, o log contem a quantidade de objetos armazenados, e para cada objeto imprime seu
+        index, tipo e posição (x, y, z) 
+
+    """
     log = str(len(objetos))
     log = log +" Objetos armazenados. \n"
 
@@ -165,6 +181,18 @@ def logObjetos():
     rospy.loginfo(log)
 
 def objComparator(obj1, obj2):
+    """!
+        Compara a posição entre dois objetos
+
+        Parametros:
+            @param obj1: Primeiro objeto a ser comparado
+            @param obj2: Segundo objeto a ser comparado
+
+        Retorno:
+            @return -1 para obj1 menor que obj2, 1 para obj1 maior que obj2 e 0 para obj1 igual a obj2
+
+        @todo consertar o *elif dist1<dist2* da função
+    """
     pose1 = np.array([obj1.pose.position.x,obj1.pose.position.y])
     pose2 = np.array([obj2.pose.position.x,obj2.pose.position.y])
 
@@ -179,6 +207,12 @@ def objComparator(obj1, obj2):
         return 0
 
 def afinaLista():
+    """!
+        Utiliza todas as definiçães do objeto e filtra para tornar a posição mais precisa
+
+        @todo remover a variavel *melhorErro* que não é usada
+
+    """
     global objetos, atualizaMapa, fixo
 
     #atualizaMapa = False
@@ -529,6 +563,15 @@ def afinaLista():
 
 # Handler da funcao retorna servico GetObject
 def entregaListaObjetos(req):
+    """!
+        Handler da função
+
+        Parametros:
+            @param req: Estado e Tipo que deseja buscar na lista de objetos 
+
+        Retorno:
+            @return serviço GetObject com a lista de todos os objetos que atendem as condições de req
+    """
 
     afinaLista()
 
@@ -545,6 +588,10 @@ def entregaListaObjetos(req):
     return GetObjectResponse(lista)
 
 def gerarArquivo():
+    """!
+        Gera um arquivo com todos os objetos na lista, subscrevendo no arquivo "mapa_gerado.txt" 
+
+    """
     # Gera um arquivo com todos os objetos na lista.
     # Atencao! tudo que ouver no arquivo "mapa_gerado" sera substituido.
     rospy.loginfo("Gerando arquivo")
@@ -558,6 +605,16 @@ def gerarArquivo():
 
 
 def geraLinhaCSV(objeto):
+    """!
+        Gera uma string contendo todas as informações de um objeto.
+
+        Parametros:
+            @param objeto: Objeto que deseja gerar os dados
+
+        Retorno:
+            @return String contendo index, tipo, estado, posição e orientação do objeto
+
+    """
     row =[str(objeto.identifier.index.data),
             str(objeto.identifier.type.data ),
             str(objeto.identifier.state.data ),
@@ -573,6 +630,10 @@ def geraLinhaCSV(objeto):
     return row
 
 def appendObjeto(objeto):
+    """!
+        @todo Função aparentimente sem utilidade, remover depois.
+
+    """
     with open(path, 'a') as arquivo:
         writer = csv.writer(arquivo, delimiter=',')
 
@@ -583,6 +644,10 @@ def appendObjeto(objeto):
             
 
 def recuperaArquivo():
+    """!
+        Gera uma lista de objetos com os dados de "mapa_gerado.txt".
+
+    """
     global indiceMaximo
     # Gera uma lista de objetos com os dados de "mapa_gerado".
     
@@ -624,6 +689,15 @@ def recuperaArquivo():
         return
 
 def setAtualizaMapa(req):
+    """!
+        Informa se o mapa foi atualizado
+
+        Parametros:
+            @param req: Informações sobre a atualização do mapa
+
+        Retorno:
+            @return Objeto do tipo SetBoolResponse contendo informações sobre o sucesso da atualização do mapa
+    """
     global atualizaMapa
     if req.data == True:
         atualizaMapa = True
@@ -637,6 +711,9 @@ def setAtualizaMapa(req):
     return resp
 
 def imprimeMapa():
+    """!
+        Desenha uma imagem contendo todos os objetos, essa funçao não mostra essa imagem na tela
+    """
 
     global imgMapa, atualizaMapa
 
@@ -677,6 +754,9 @@ def imprimeMapa():
         cv.circle(imgMapa, (int(posicao[0]),int(posicao[1])), 5, (cor[0],cor[1],cor[2]), -1)
 
 def insereBasesSuspensas():
+    """!
+        Insere as bases suspensa de posição fixa na lista de objetos
+    """
     global objetos, fixo
     base1 = Object()
     base1.identifier.data="D"
