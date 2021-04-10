@@ -561,16 +561,15 @@ def afinaLista():
 
 
 
-# Handler da funcao retorna servico GetObject
 def entregaListaObjetos(req):
     """!
-        Handler da função
+        Gera a reposta para o serviço que provê acesso aos objetos armazenados
 
         Parametros:
-            @param req: Estado e Tipo que deseja buscar na lista de objetos 
+            @param req(GetObjetct): Estado e Tipo que deseja buscar na lista de objetos 
 
         Retorno:
-            @return serviço GetObject com a lista de todos os objetos que atendem as condições de req
+            @return resposta(GetObjectResponse) com a lista de todos os objetos que atendem as condições de req
     """
 
     afinaLista()
@@ -690,13 +689,13 @@ def recuperaArquivo():
 
 def setAtualizaMapa(req):
     """!
-        Informa se o mapa foi atualizado
+        Informa se o mapa deve continuar sendo atualizado
 
         Parametros:
-            @param req: Informações sobre a atualização do mapa
+            @param req(SetBool): True se o mapa deve ser atualizado
 
         Retorno:
-            @return Objeto do tipo SetBoolResponse contendo informações sobre o sucesso da atualização do mapa
+            @return resposta(SetBoolResponse) - contém informações sobre o sucesso da atualização do mapa
     """
     global atualizaMapa
     if req.data == True:
