@@ -29,12 +29,12 @@ imgDraw = np.zeros((3,3,1))
 
 def imprimeTodosQuadrados(quadrados, img):
     """!
+        Desenha em uma imagem previamente analisada os círculos indicando os
+        quadrados observados.
         Parâmetros:
             @param quadrados(int32) - coordenadas dos vértices dos quadrados na imagem.
             @param img(np.array) - imagem lida pela câmera
-
-        Desenha em uma imagem previamente analisada os círculos indicando os
-        quadrados observados.
+        
     """
     
     global imgDraw
@@ -44,9 +44,22 @@ def imprimeTodosQuadrados(quadrados, img):
             cv.circle(imgDraw, (point[0], point[1]), 5, (255,0,255), -1)
 
 def converteImagem(img):
+    """!
+        Converte uma imagem fornecida pelo ROS para o formato do OpenCV
+
+        Parâmetros:
+            @param img (np.array) - Imagem fornecida pelo ROS a ser convertida.
+        Retorno:
+            @returns Imagem no formato do OpenCV.
+    """
+    
     return CvBridge().imgmsg_to_cv2(img, "bgr8")
 
 def inverteTransformacao(R, t):
+    """!
+        ##ELTON##
+    """
+    
     RInverso = np.transpose(R)
 
     tInverso  = - np.matmul(RInverso, t)
@@ -54,7 +67,11 @@ def inverteTransformacao(R, t):
     return RInverso, tInverso
 
 
-def recebeInfo(msg):  
+def recebeInfo(msg):
+    """!
+        ##ELTON##
+    """
+    
 
     global K
 
@@ -73,10 +90,6 @@ def errorHandler(status, func_name, err_msg, dile_name, line, user_data):
 
 def procuraQuadrado(mascara):
     """!
-        Parâmetros:
-            @param mascara(np.array) - imagem previamente filtrada.
-        Retorno:
-            @returns Coordenadas dos vértices do quadrado obtido.
         Função que busca, identifica, localiza e define as coordenadas
         de um quadrado caso seja identificado em uma figura.
         Define os contornos presentes na imagem, localiza os vértices dos
@@ -84,6 +97,10 @@ def procuraQuadrado(mascara):
         e verifica a similaridade com uma reta. Caso todos os vértices ligados
         correspondam ao formato desejado, extrai as coordenadas de tais vértices
         e aponta-os como o quadrado.
+        Parâmetros:
+            @param mascara(np.array) - imagem previamente filtrada.
+        Retorno:
+            @returns Coordenadas dos vértices do quadrado obtido.
     """
         
     kernel = np.ones((5,5),np.uint8)
@@ -170,12 +187,12 @@ def procuraQuadrado(mascara):
 
 def recebeImagem(msg):
     """!
-        Parâmetro:
-            @param msg ##ELTON (VERIFICAR)##
-
         Realiza a filtragem de uma imagem para cores pré-definidas; localiza os
         vértices dos quadrados (se existirem); verifica as coordenadas do quadrado
         relativa ao centro da imagem; estima a pose do quadrado.
+        Parâmetro:
+            @param msg ##ELTON (VERIFICAR)##
+        
     """
     
     img = converteImagem(msg)

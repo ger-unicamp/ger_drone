@@ -42,7 +42,17 @@ def recebeInfo(msg):
 
 def procuraQuadrado(mascara):
     """!
-        Definida em detecta_base
+        Função que busca, identifica, localiza e define as coordenadas
+        de um quadrado caso seja identificado em uma figura.
+        Define os contornos presentes na imagem, localiza os vértices dos
+        contornos, desenvolve curvas ligando tais vértices (cv.approxPoly)
+        e verifica a similaridade com uma reta. Caso todos os vértices ligados
+        correspondam ao formato desejado, extrai as coordenadas de tais vértices
+        e aponta-os como o quadrado.
+        Parâmetros:
+            @param mascara(np.array) - imagem previamente filtrada.
+        Retorno:
+            @returns Coordenadas dos vértices do quadrado obtido.
     """
     
     kernel = np.ones((5,5),np.uint8)
@@ -101,14 +111,14 @@ def procuraQuadrado(mascara):
 
 def processaImagem(img):
     """!
-    Parâmetros:
-        @param img (np.array) - imagem a ser processada.
-    Retorno:
-        @returns Verificação da presença de quadrados na imagem filtrada.
+        Realiza um threshold de uma imagem a fim de aplicar o filtro closing. Em
+        seguida, aplica a função de identificar a presença de um quadrado na imagem
+        filtrada.
+        Parâmetros:
+            @param img (np.array) - imagem a ser processada.
+        Retorno:
+            @returns Verificação da presença de quadrados na imagem filtrada.
 
-    Realiza um threshold de uma imagem a fim de aplicar o filtro closing. Em
-    seguida, aplica a função de identificar a presença de um quadrado na imagem
-    filtrada.
     """
     
     hsv = cv.cvtColor(img, cv.COLOR_BGR2HSV)
@@ -183,12 +193,13 @@ def transformaImagem(img, quad):
 
 def rotacionaImagem(img):
     """!
-    Parâmetro:
-        @param img (np.array) - Imagem lida para análise
     Identifica a inclinação do mostrador em relação à câmera de forma a deixar
     seus dígitos no formato de leitura da esquerda para a direita e de cima
     para baixo. Realiza rotações da imagem até que sua inclinação esteja de
     acordo com tais condições para posterior extração de dígitos.
+    Parâmetro:
+        @param img (np.array) - Imagem lida para análise
+    
     """
     
     template = percentual[:,0:45]
@@ -252,16 +263,17 @@ def rotacionaImagem(img):
 
 def extraiDigitos(dig):
     """!
-    Parâmetro:
-        @param dig (np.array) - lista de imagens de dígitos a serem analisados.
-    Retorno:
-        @returns Dígito obtido
+        Fragmenta uma imagem de um dígito em uma forma de um display de 7 segmentos.
+        Analisa quais os segmentos que estão "apagados" ou "acesos" e, baseado nisto,
+        determina qual o dígito em questão. É um método pouco eficiente por depender
+        de coordenadas em uma imagem, devendo ser otimizado para que reconheça
+        formatos em vez disso.
+        Parâmetro:
+            @param dig (np.array) - lista de imagens de dígitos a serem analisados.
+        Retorno:
+            @returns Dígito obtido
 
-    Fragmenta uma imagem de um dígito em uma forma de um display de 7 segmentos.
-    Analisa quais os segmentos que estão "apagados" ou "acesos" e, baseado nisto,
-    determina qual o dígito em questão. É um método pouco eficiente por depender
-    de coordenadas em uma imagem, devendo ser otimizado para que reconheça
-    formatos em vez disso.
+    
     """
     
     ret,dig = cv.threshold(dig,127,255, cv.THRESH_BINARY)
@@ -311,11 +323,11 @@ def extraiDigitos(dig):
 
 def converte_coord(valor):
     """!
+    Realiza uma transformação de coordenadas em uma imagem.
     Parâmetros: ##ELTON (VERIFICAR)##
     Retorno:
         @returns Imagem nas novas coordenadas.
         
-    Realiza uma transformação de coordenadas em uma imagem.
     """
 
     pts1 = ([0,0],[24,0],[24,44],[0,44])

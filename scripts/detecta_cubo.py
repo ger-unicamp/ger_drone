@@ -24,9 +24,22 @@ pontoReal = np.array([[-3.588e-2,-3.588e-2,0],
                     [3.588e-2,-3.588e-2,0]], dtype=np.float32)
 
 def converteImagem(img):
-    return CvBridge().imgmsg_to_cv2(img, "bgr8")
+    """!
+        Converte uma imagem fornecida pelo ROS para o formato do OpenCV
+
+        Parâmetros:
+            @param img (np.array) - Imagem fornecida pelo ROS a ser convertida.
+        Retorno:
+            @returns Imagem no formato do OpenCV.
+    """
+    
+        return CvBridge().imgmsg_to_cv2(img, "bgr8")
 
 def inverteTransformacao(R, t):
+    """!
+        ##ELTON##
+    """
+    
     RInverso = np.transpose(R)
 
     tInverso  = - np.matmul(RInverso, t)
@@ -34,7 +47,11 @@ def inverteTransformacao(R, t):
     return RInverso, tInverso
 
 
-def recebeInfo(msg):  
+def recebeInfo(msg):
+    """!
+        ##ELTON##
+    """
+    
 
     global K
 
@@ -48,6 +65,10 @@ def recebeInfo(msg):
     K = np.array(K,dtype=np.float32)
 
 def recebeImagem(msg):
+    """!
+        ##ELTON##
+    """
+    
     global pontoReal
 
     img = converteImagem(msg)
@@ -89,6 +110,10 @@ def recebeImagem(msg):
         publicaCubo(RCamObj, tCamObj, letra)
 
 def publicaCubo(R, t, letra):
+    """!
+        ##ELTON##
+    """
+    
     msg = Object()
 
     msg.identifier.data = letra

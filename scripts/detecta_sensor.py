@@ -37,6 +37,7 @@ def inverteTransformacao(R, t):
 
 #Procura quadrados na imagem usando uma mascara
 def procuraQuadrado(mascara):
+    """!Função descrita em detecta_base"
     kernel = np.ones((5,5),np.uint8)
     
     bordas = cv.Canny(mascara, 100, 500, kernel)
@@ -115,6 +116,10 @@ def estimaPoseSensor(quad):
 
 #Recebe a imagem, procura os quadrados e publica
 def recebeImagem(msg):
+    """!
+        Função descrita em 'detecta_base'
+    """
+    
     img = converteImagem(msg)
 
     #Calcula as mascaras
@@ -154,6 +159,10 @@ def recebeImagem(msg):
 
 #@param cor - True se verde, False se vermelho
 def publicaSensor(R, t, cor):
+    """!
+        ##ELTON##
+    """
+
     msg = Object()
 
     if cor == True:
