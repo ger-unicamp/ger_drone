@@ -29,12 +29,13 @@ imgDraw = np.zeros((3,3,1))
 
 def imprimeTodosQuadrados(quadrados, img):
     """!
+        Desenha em uma imagem previamente analisada os círculos indicando os
+        quadrados observados.
+
         Parâmetros:
             @param quadrados(int32) - coordenadas dos vértices dos quadrados na imagem.
             @param img(np.array) - imagem lida pela câmera
-
-        Desenha em uma imagem previamente analisada os círculos indicando os
-        quadrados observados.
+        
     """
     
     global imgDraw
@@ -44,9 +45,34 @@ def imprimeTodosQuadrados(quadrados, img):
             cv.circle(imgDraw, (point[0], point[1]), 5, (255,0,255), -1)
 
 def converteImagem(img):
+    """!
+        Converte uma imagem fornecida pelo ROS para o formato do OpenCV
+
+        Parâmetros:
+            @param img (np.array) - Imagem fornecida pelo ROS a ser convertida.
+        Retorno:
+            @returns Imagem no formato do OpenCV.
+    """
+    
     return CvBridge().imgmsg_to_cv2(img, "bgr8")
 
 def inverteTransformacao(R, t):
+    """!
+        Inverte uma transformação geométrica.
+
+        Se a transformação leva do sistema de coordena A para o B, 
+        o retorno será do sistema B para o A
+
+        Parâmetros:
+            @param R (np.darray 3x3) - Matriz de rotação
+            @param t (np.darray 3x1) - Vetor de translação
+
+        Retorno:
+            @returns RInverso (np.darray 3x3) - Matriz de rotação inversa
+            @returns tInverso (np.darray 3x1) - Vetor de translação inverso
+        
+    """
+    
     RInverso = np.transpose(R)
 
     tInverso  = - np.matmul(RInverso, t)
@@ -54,7 +80,16 @@ def inverteTransformacao(R, t):
     return RInverso, tInverso
 
 
-def recebeInfo(msg):  
+def recebeInfo(msg):
+    """!
+        Recebe a mensagem com as informações da câmera
+
+        Extrai apenas a matriz de calibração
+
+        Parâmetros:
+            @param msg (CameraInfo) - informações da câmera
+    """
+    
 
     global K
 
@@ -73,10 +108,8 @@ def errorHandler(status, func_name, err_msg, dile_name, line, user_data):
 
 def procuraQuadrado(mascara):
     """!
-        Parâmetros:
-            @param mascara(np.array) - imagem previamente filtrada.
-        Retorno:
-            @returns Coordenadas dos vértices do quadrado obtido.
+        Extrai os quadrados na máscara
+
         Função que busca, identifica, localiza e define as coordenadas
         de um quadrado caso seja identificado em uma figura.
         Define os contornos presentes na imagem, localiza os vértices dos
@@ -84,6 +117,11 @@ def procuraQuadrado(mascara):
         e verifica a similaridade com uma reta. Caso todos os vértices ligados
         correspondam ao formato desejado, extrai as coordenadas de tais vértices
         e aponta-os como o quadrado.
+
+        Parâmetros:
+            @param mascara(np.array) - imagem previamente filtrada.
+        Retorno:
+            @returns Coordenadas dos vértices do quadrado obtido.
     """
         
     kernel = np.ones((5,5),np.uint8)
@@ -170,12 +208,15 @@ def procuraQuadrado(mascara):
 
 def recebeImagem(msg):
     """!
-        Parâmetro:
-            @param msg ##ELTON (VERIFICAR)##
+        Recebe uma mensagem de imagem, extrai as bases e publica
 
         Realiza a filtragem de uma imagem para cores pré-definidas; localiza os
         vértices dos quadrados (se existirem); verifica as coordenadas do quadrado
         relativa ao centro da imagem; estima a pose do quadrado.
+
+        Parâmetros:
+            @param msg (Image) - mensagem da imagem
+        
     """
     
     img = converteImagem(msg)
@@ -237,7 +278,13 @@ def recebeImagem(msg):
 
 def publicaBase(R, t):
     """!
-        ##ELTON##
+        Publica uma base
+
+        Recebe a informação da posição da base e publica um objeto detectado nesse lugar
+
+        Parâmetros:
+            @param R (list/np.darray 3x3) - matriz de rotação
+            @param t (list/np.darray 3x1) - vetor de translação
     """
     msg = Object()
 

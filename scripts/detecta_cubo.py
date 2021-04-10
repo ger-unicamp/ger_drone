@@ -24,9 +24,38 @@ pontoReal = np.array([[-3.588e-2,-3.588e-2,0],
                     [3.588e-2,-3.588e-2,0]], dtype=np.float32)
 
 def converteImagem(img):
+    """!
+        Converte uma imagem fornecida pelo ROS para o formato do OpenCV
+
+        @todo Criar um módulo com essa função de apoio
+
+        Parâmetros:
+            @param img (np.array) - Imagem fornecida pelo ROS a ser convertida.
+        Retorno:
+            @returns Imagem no formato do OpenCV.
+    """
+    
     return CvBridge().imgmsg_to_cv2(img, "bgr8")
 
 def inverteTransformacao(R, t):
+    """!
+        Inverte uma transformação geométrica.
+
+        Se a transformação leva do sistema de coordena A para o B, 
+        o retorno será do sistema B para o A
+
+        @todo Criar um módulo com essa função de apoio
+
+        Parâmetros:
+            @param R (np.darray 3x3) - Matriz de rotação
+            @param t (np.darray 3x1) - Vetor de translação
+
+        Retorno:
+            @returns RInverso (np.darray 3x3) - Matriz de rotação inversa
+            @returns tInverso (np.darray 3x1) - Vetor de translação inverso
+        
+    """
+    
     RInverso = np.transpose(R)
 
     tInverso  = - np.matmul(RInverso, t)
@@ -34,7 +63,18 @@ def inverteTransformacao(R, t):
     return RInverso, tInverso
 
 
-def recebeInfo(msg):  
+def recebeInfo(msg):
+    """!
+        Recebe a mensagem com as informações da câmera
+        
+        Extrai apenas a matriz de calibração
+
+        @todo Criar um módulo com essa função de apoio
+
+        Parâmetros:
+            @param msg (CameraInfo) - informações da câmera
+    """
+    
 
     global K
 
@@ -48,6 +88,17 @@ def recebeInfo(msg):
     K = np.array(K,dtype=np.float32)
 
 def recebeImagem(msg):
+    """!
+        Recebe uma mensagem de imagem, extrai os QR codes e publica
+
+        Utiliza o pacote pyzbar para extrair os QR codes, 
+        e com as bordas utiliza o solvePnP para estimar a posição
+
+        Parâmetros:
+            @param msg (Image) - mensagem da imagem
+        
+    """
+    
     global pontoReal
 
     img = converteImagem(msg)
@@ -89,6 +140,18 @@ def recebeImagem(msg):
         publicaCubo(RCamObj, tCamObj, letra)
 
 def publicaCubo(R, t, letra):
+    """!
+        Publica o QR code
+
+        Recebe a posição e dados (letra) dele para criar e publicar o objeto detectado
+
+        @todo Criar um módulo com essa função de apoio e generalizar ela
+
+        Parâmetros:
+            @param R (list/np.darray 3x3) - matriz de rotação
+            @param t (list/np.darray 3x1) - vetor de translação
+    """
+    
     msg = Object()
 
     msg.identifier.data = letra
