@@ -98,6 +98,12 @@ def checar(a):
     print('CHEGOU')
 
 def recebeDiagnostico(msg):
+     """!
+        Verfica se chegou no ponto de destino
+        Solucao mais precisa e pratica que a funcao checar
+
+        @param msg: objeto que contém dados como a posicao atual
+    """
     global chegou
     if msg.tracker_status.have_goal == False:
         chegou = True
@@ -105,6 +111,13 @@ def recebeDiagnostico(msg):
         chegou = False
 
 def compara(msg,w):
+      """!
+        Compara posicao do drone com o seu destino
+
+        Parametros:
+        @param msg: objeto que contém dados como a posicao atual
+        @param w: lista [x,y,x] com a posicao desejada
+    """
     global check 
     posx = msg.position.x
     posy = msg.position.y
