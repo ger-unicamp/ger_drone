@@ -15,6 +15,10 @@ rospy.init_node('caminho2')
 check = False
 
 def decolar():
+      """!
+        O drone decola a partir desse momento
+        Não é recomendado efetuar outros comandos enquanto ele decola
+    """
     print('D')
     rospy.wait_for_service('/uav1/uav_manager/takeoff')
     dois = rospy.ServiceProxy('/uav1/uav_manager/takeoff', Trigger)
@@ -22,6 +26,9 @@ def decolar():
     dois(reqb)
 
 def pousar():
+       """!
+       Pousa o drone na posicao atual
+    """
    print('P')
    rospy.wait_for_service('/uav1/uav_manager/land')
    um = rospy.ServiceProxy('/uav1/uav_manager/land', Trigger)
@@ -30,6 +37,12 @@ def pousar():
 
 
 def voar(a):
+         """!
+        Voa ate uma posicao, verificando se chegou nela
+
+        Parametros:
+            @param a: lista [x,y,z] com a posicao desejada
+    """
     rospy.wait_for_service('/uav1/control_manager/reference')
     tres = rospy.ServiceProxy('/uav1/control_manager/reference',ReferenceStampedSrv)
 
@@ -48,6 +61,12 @@ def voar(a):
 
 
 def checar(a):
+        """!
+        Checa se o drone ja chegou na posicao desejada
+
+        Parametros:
+            @param a: lista [x,y,z] com a posicao desejada
+    """
     global check 
     while check == False:
         pt = rospy.wait_for_message('/uav1/control_manager/position_cmd',PositionCommand)
@@ -57,6 +76,13 @@ def checar(a):
 
 
 def compara(msg,w):
+       """!
+        Compara posicao do drone com o seu destino
+
+        Parametros:
+        @param msg: objeto que contém dados como a posicao atual
+        @param w: lista [x,y,x] com a posicao desejada
+    """
     global check 
     posx = msg.position.x
     posy = msg.position.y
@@ -75,6 +101,9 @@ def compara(msg,w):
 
 
 def velocidade():
+      """!
+        Altera o perfil de velocidade do drone para fast
+    """
     rospy.wait_for_service('/uav1/constraint_manager/set_constraints')
     quatro = rospy.ServiceProxy('/uav1/constraint_manager/set_constraints',String)
     reqd = String._request_class()
@@ -83,6 +112,10 @@ def velocidade():
     quatro(reqd)
 
 def getSensor():
+    """!
+        Requisita um objeto que contém quais foram os sensores vemelhos localizados e a sua posicao
+        Adiciona as poses desses sensores em lista
+    """
     print('entrou')
     rospy.wait_for_service('get_object')
     a = rospy.ServiceProxy('get_object', GetObject)
@@ -106,6 +139,9 @@ def getSensor():
     voarSensor(lista)
 
 def voarSensor(lista):
+    """!
+        Voa ate a posicao dos sensores vermelhos
+    """    
     PoseSensores = []
     for i in lista:
         p = [(i.pose.position.x),i.pose.position.y,0.6]
@@ -123,6 +159,9 @@ def voarSensor(lista):
         #rospy.sleep(2)
 
 def ativaLed():
+    """!
+        Mantém o LED acesso por 15 segundos (especificacao da competicao)
+    """
     msg = LedColor()
     msg.r = 255
     msg.g = 0
@@ -137,6 +176,11 @@ def ativaLed():
     pub.publish(msg)
 
 def ajustaPonto(ponto):
+     """!
+    Muda o controlador do Drone por um breve momento, somente para realizar a aproximação do Drone
+
+    Mesma funcionalidade de preparapouso porem mais precisa
+    """
     rospy.wait_for_service('/uav1/control_manager/switch_controller')
     proxy = rospy.ServiceProxy('/uav1/control_manager/switch_controller', String)
     req = String._request_class()
