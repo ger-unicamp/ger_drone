@@ -27,7 +27,7 @@ def decolar():
 
 def pousar():
        """!
-       Pousa o drone na posicao atual
+       Pousa o drone na posiçao atual
     """
    print('P')
    rospy.wait_for_service('/uav1/uav_manager/land')
@@ -38,10 +38,10 @@ def pousar():
 
 def voar(a):
          """!
-        Voa ate uma posicao, verificando se chegou nela
+        Voa ate uma posição, verificando se chegou nela
 
         Parametros:
-            @param a: lista [x,y,z] com a posicao desejada
+            @param a: lista [x,y,z] com a posição desejada
     """
     rospy.wait_for_service('/uav1/control_manager/reference')
     tres = rospy.ServiceProxy('/uav1/control_manager/reference',ReferenceStampedSrv)
@@ -62,7 +62,7 @@ def voar(a):
 
 def checar(a):
         """!
-        Checa se o drone ja chegou na posicao desejada
+        Checa se o drone já chegou na posição desejada
 
         Parametros:
             @param a: lista [x,y,z] com a posicao desejada
@@ -77,11 +77,11 @@ def checar(a):
 
 def compara(msg,w):
        """!
-        Compara posicao do drone com o seu destino
+        Compara posição do drone com o seu destino
 
         Parametros:
-        @param msg: objeto que contém dados como a posicao atual
-        @param w: lista [x,y,x] com a posicao desejada
+        @param msg: objeto que contém dados como a posição atual
+        @param w: lista [x,y,x] com a posição desejada
     """
     global check 
     posx = msg.position.x
@@ -140,7 +140,7 @@ def getSensor():
 
 def voarSensor(lista):
     """!
-        Voa ate a posicao dos sensores vermelhos
+        Voa ateé a posição dos sensores vermelhos
     """    
     PoseSensores = []
     for i in lista:
@@ -160,7 +160,7 @@ def voarSensor(lista):
 
 def ativaLed():
     """!
-        Mantém o LED acesso por 15 segundos (especificacao da competicao)
+        Mantém o LED acesso por 15 segundos (especificação da competição)
     """
     msg = LedColor()
     msg.r = 255
