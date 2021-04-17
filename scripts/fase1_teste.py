@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 
 
+"""!
+REMOVER
+"""
+
 import rospy
 
 from std_srvs.srv import Trigger 

@@ -1,4 +1,8 @@
 #!/usr/bin/env python
+"""!
+DELETAR
+Versão antiga da fase2
+"""
 
 import rospy
 from std_srvs.srv import Trigger

@@ -18,7 +18,7 @@ chegou = False
 
 def velocidade():
     """!
-        Altera o perfil de velocidade do drone para faset
+        Altera o perfil de velocidade do drone para fast
     """
     rospy.wait_for_service('/uav1/constraint_manager/set_constraints')
     quatro = rospy.ServiceProxy('/uav1/constraint_manager/set_constraints',String)

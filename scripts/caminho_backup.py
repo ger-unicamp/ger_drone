@@ -2,6 +2,12 @@
 
 # pontos iniciais ---- [5,1.8,-0.8] -- [7.5,2,2] -- [7.5,7.5,2] --- [2,7.5,2]----- [2,2,2] ---- [5,5,2]
 
+"""!
+REMOVER
+Versão antiga da fase 1
+"""
+
+
 import rospy
 from std_srvs.srv import Trigger
 from mrs_msgs.srv import Vec4

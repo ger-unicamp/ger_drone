@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+"""!
+DELETAR
+"""
 
 import rospy
 from mrs_msgs.srv import String 

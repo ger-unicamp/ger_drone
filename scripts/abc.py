@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+"""!
+DELETAR
+versão antiga da fase2
+"""
 import rospy
 from std_srvs.srv import Trigger
 from mrs_msgs.srv import Vec4

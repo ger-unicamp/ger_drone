@@ -3,6 +3,10 @@
 import rospy
 from mrs_msgs.msg import ConstraintManagerDiagnostics
 
+"""!
+Se inscreve no topico que fornece dados de velocidade e heading momentâneos do drone
+"""
+
 def callback(mensagem):
     print(mensagem.current_values)
     

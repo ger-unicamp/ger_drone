@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 #chama de volta pra base
+"""
+REMOVER
+"""
 import rospy
 from mrs_msgs.srv import Vec4
 from std_srvs.srv import Trigger

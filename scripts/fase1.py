@@ -22,6 +22,10 @@ chegou = False
 rospy.init_node('fase1')
 
 def pousar():
+   """!
+       Pousa o drone na posicao atual
+    """
+   
     print('P')
     rospy.wait_for_service('/uav1/uav_manager/land')
     um = rospy.ServiceProxy('/uav1/uav_manager/land', Trigger)
@@ -34,6 +38,10 @@ def pousar():
    
 
 def decolar():
+    """!
+        O drone decola a partir desse momento
+        Não é recomendado efetuar outros comandos enquanto ele decola
+    """   
     print('D')
     rospy.wait_for_service('/uav1/uav_manager/takeoff')
     dois = rospy.ServiceProxy('/uav1/uav_manager/takeoff', Trigger)
@@ -46,6 +54,10 @@ def decolar():
         pass
 
 def rotina():
+    """!
+        O drone realiza pouso e decolagem no ponto atual
+        Inclui os tempos entre as ações para evitar conflito
+    """
     pousar()
     rospy.sleep(2)
     decolar()
@@ -53,6 +65,12 @@ def rotina():
     
 
 def voar(a):
+      """!
+        Voa ate uma posicao, verificando se chegou nela
+        
+        Parametros:
+            @param a: lista [x,y,z] com a posicao desejada
+    """
     print(a)
     rospy.wait_for_service('/uav1/control_manager/reference')
     tres = rospy.ServiceProxy('/uav1/control_manager/reference',ReferenceStampedSrv)
@@ -72,6 +90,9 @@ def voar(a):
     checar(lista)
 
 def velocidade():
+    """!
+        Altera o perfil de velocidade do drone para fast
+    """
     rospy.wait_for_service('/uav1/constraint_manager/set_constraints')
     quatro = rospy.ServiceProxy('/uav1/constraint_manager/set_constraints',String)
     reqd = String._request_class()
@@ -80,8 +101,17 @@ def velocidade():
     quatro(reqd)
 
 def checar(a):
+      """!
+        Checa se o drone ja chegou na posicao desejada
+        
+        Parametros:
+            @param a: lista [x,y,z] com a posicao desejada
+    """
     global check 
     while (check == False) or (chegou == False):
+      """!
+        Se inscreve no tópico que fornece posição momentânea do drone
+      """    
         pt = rospy.wait_for_message('/uav1/control_manager/position_cmd',PositionCommand)
         compara(pt,a)
         #print(check)
@@ -89,6 +119,13 @@ def checar(a):
     rospy.sleep(5)    
 
 def compara(msg,w):
+    """!
+        Compara posicao do drone com o seu destino
+
+        Parametros:
+        @param msg: objeto que contém dados como a posicao atual 
+        @param w: lista [x,y,x] com a posicao desejada
+    """    
     global check 
     posx = msg.position.x
     posy = msg.position.y
@@ -128,6 +165,11 @@ def getListObject():
     getPose(lista)
 
 def getPose(lista):
+    """!
+        Inicia rotina do trajeto do drone
+
+        @param lista: lista de listas, cada entrada corresponde  a um ponto do trajeto
+    """    
     listaPoses = []
     for i in lista:
         #a = [i.pose.position.x, i.pose.position.y, i.pose.position.z]
@@ -146,6 +188,12 @@ def preparapouso(j):
     ajustaPonto(a)
 
 def recebeDiagnostico(msg):
+    """!
+        Verfica se chegou no ponto de destino
+        Solucao mais precisa e pratica que a funcao checar
+
+        @param msg: objeto que contém dados como a posicao atual 
+    """
     global chegou
     if msg.tracker_status.have_goal == False:
         chegou = True
