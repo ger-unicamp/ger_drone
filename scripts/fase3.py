@@ -18,6 +18,12 @@ import numpy as np
 check = False
 
 def ReqPontos():
+    """
+    Pede as informaçoes das bases que ainda nao foram processadas
+
+    Retorno:
+    @return: lista com as posiçoes de todos as bases nao processadas dadas em [x,y,z]
+    """
     rospy.wait_for_service('get_object')
     a = rospy.ServiceProxy('get_object', GetObject)
     requ = GetObject._request_class()
@@ -45,6 +51,12 @@ def ReqPontos():
     return(listaPontos)
 
 def ReqMostrador():
+    """
+    Pede as informacoes dos mostradores
+
+    Retorno:
+    @return obj: objeto com os valores dos mostradores, gas e ajuste
+    """
     rospy.wait_for_service('get_object')
     proxy = rospy.ServiceProxy('get_object', GetObject)
     requ = GetObject._request_class()
@@ -59,6 +71,12 @@ def ReqMostrador():
 
 
 def Voar(a):
+    """!
+        Voa ate uma posicao, verificando se chegou nela
+
+        Parametros:
+            @param a: lista [x,y,z] com a posicao desejada
+    """
     print(a)
     rospy.wait_for_service('/uav1/control_manager/reference')
     tres = rospy.ServiceProxy('/uav1/control_manager/reference',ReferenceStampedSrv)
@@ -75,6 +93,12 @@ def Voar(a):
 
 
 def checar(a):
+    """!
+       Checa se o drone ja chegou na posicao desejada
+
+       Parametros:
+           @param a: lista [x,y,z] com a posicao desejada
+   """
     global check
     while check == False:
         pt = rospy.wait_for_message('/uav1/control_manager/position_cmd',PositionCommand)
@@ -83,6 +107,9 @@ def checar(a):
     check = False
 
 def Velocidade():
+    """!
+        Altera o perfil de velocidade do drone para fast
+    """
     rospy.wait_for_service('/uav1/constraint_manager/set_constraints')
     quatro = rospy.ServiceProxy('/uav1/constraint_manager/set_constraints',String)
     reqd = String._request_class()
@@ -91,11 +118,22 @@ def Velocidade():
     quatro(reqd)
 
 def PreparaPouso(j):
+    """!
+    Prepara o drone para pousar de forma precisa na base inicial
+    """
     a = [j[0],j[1],0.5]
     Voar(a)
     ajustaPonto(a)
     lista = [x,y,z]
+
+
 def recebeDiagnostico(msg):
+    """!
+        Verfica se chegou no ponto de destino
+        Solucao mais precisa e pratica que a funcao checar
+
+        @param msg: objeto que contém dados como a posicao atual
+    """
     global chegou
     if msg.tracker_status.have_goal == False:
         chegou = True
@@ -103,7 +141,14 @@ def recebeDiagnostico(msg):
         chegou = False
 
 def compara(msg,w):
-    global check 
+    """!
+        Compara posicao do drone com o seu destino
+
+        Parametros:
+        @param msg: objeto que contém dados como a posicao atual
+        @param w: lista [x,y,x] com a posicao desejada
+    """
+    global check
     posx = msg.position.x
     posy = msg.position.y
     posz = msg.position.z
@@ -115,10 +160,15 @@ def compara(msg,w):
         check = True
     else:
         check = False
-    
-    return  
+
+    return
 
 def ajustaPonto(ponto):
+    """!
+    Muda o controlador do Drone por um breve momento, somente para realizar a aproximação do Drone
+
+    Mesma funcionalidade de preparapouso porem mais precisa
+    """
     rospy.wait_for_service('/uav1/control_manager/switch_controller')
     proxy = rospy.ServiceProxy('/uav1/control_manager/switch_controller', String)
     req = String._request_class()
@@ -138,6 +188,12 @@ def ajustaPonto(ponto):
     rospy.sleep(1)
 
 def ativaLed(cor, tempo):
+    """
+    Altera a cor do led por um determinado tempo e para uma determinada corresponde
+
+    @param cor: lista [R,G,B] com a cor do led
+    @param tempo: tempo que o drone ficara com o led acesso
+    """
 
     msg = LedColor()
     msg.r = cor[0]
@@ -145,7 +201,7 @@ def ativaLed(cor, tempo):
     msg.b = cor[2]
     pubLed.publish(msg)
     rospy.sleep(tempo)
-    
+
     msg = LedColor()
     msg.r = 0
     msg.g = 0
@@ -153,6 +209,9 @@ def ativaLed(cor, tempo):
     pubLed.publish(msg)
 
 def pousar():
+    """!
+        Pousa o drone na posicao atual
+     """
    print('P')
    rospy.wait_for_service('/uav1/uav_manager/land')
    um = rospy.ServiceProxy('/uav1/uav_manager/land', Trigger)
@@ -160,6 +219,13 @@ def pousar():
    um(reqa)
 
 def Sinal(gas,ajuste):
+    """
+    Define a cor do led se o valor do gas estiver entre 45 e 55 para verde, senao vermelho
+    Define a cor do led se o valor do ajuste estiver entre -5 e 5 para verde, senao vermelho
+
+    @param gas: valor do gas
+    @param ajuste: valor do ajuste
+    """
     ativaLed([255,0,255], 10)
 
     if (gas>=45) and (gas<=55):
@@ -176,6 +242,11 @@ def Sinal(gas,ajuste):
 
 
 def publicaProcessado(obj):
+    """
+    Publica se a base ja foi processadas
+
+    @param obj: base que acabou de ser processada
+    """
     obj.identifier.state.data = Identifier.STATE_PROCESSADO
     pubObj.publish(obj)
 
@@ -197,7 +268,7 @@ if __name__ == '__main__':
             ajustaPonto([i[0],i[1],0.5])
             rospy.sleep(10)
 
-            
+
             lista = ReqMostrador()
 
             for obj in lista:
@@ -213,9 +284,9 @@ if __name__ == '__main__':
         pousar()
 
 
-            
-            
-            
+
+
+
 
 
     except rospy.ROSInternalException:
