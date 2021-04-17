@@ -156,13 +156,20 @@ def separa_lista3(lista):
     bases = ["A","B","C","D","E"]
     baseOrigem= bases[0]
 
+    #Seta o ponto de origem para a primeira base e voa até ela
     origem = ChecaPose(bases[0])
     voar(origem)
     voar([origem[0]+0.2,origem[1]+0.2,0.5])
     #ajustaPonto([origem[0]+0.2,origem[1]+0.2,0.5])
 
+    #Verifica qual o cubo sobre a base
     cubo = base_cubo()
 
+    #Laço principal da fase: remove a base da lista de visitadas,
+    # verifica qual a base no cubo atual, e qual a pose dela
+    # pega o cubo sobre a base, voa para a base dele, solta ele e verifica
+    # qual deve ser a próxima base de origem 
+    # (vendo se existe um cubo na destino atual ou indo para a próxima base não visitada da lista)
     while len(bases) > 0: 
         bases.remove(baseOrigem)
 
