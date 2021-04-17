@@ -1,6 +1,7 @@
 #!/usr/bin/env python
-
-
+"""!
+Seria bom manter mas alterar um pouco
+"""
 
 import rospy
 from mrs_msgs.srv import ReferenceStampedSrv

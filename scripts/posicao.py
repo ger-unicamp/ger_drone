@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
-
+"""!
+    Se inscreve no tópico que fornece a pose isntantânea
+"""
 import rospy
 from mrs_msgs.msg import PositionCommand
 from geometry_msgs.msg import Point

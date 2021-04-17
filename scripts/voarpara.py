@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 #manda pra uma posição marcada
+"""!
+DELETAR
+"""
 import rospy
 from mrs_msgs.srv import Vec4
 
