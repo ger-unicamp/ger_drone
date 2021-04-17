@@ -59,7 +59,7 @@ def ReqPontos():
 
 def voar(a):
     """!
-        Voa ate uma posicao, verificando se chegou nela
+        Voa até uma posição, verificando se chegou nela
         
         Parametros:
             @param a: lista [x,y,z] com a posicao desejada
@@ -84,7 +84,7 @@ def voar(a):
 
 def checar(a):
     """!
-        Checa se o drone ja chegou na posicao desejada
+        Checa se o drone já chegou na posição desejada
         
         Parametros:
             @param a: lista [x,y,z] com a posicao desejada
@@ -98,6 +98,12 @@ def checar(a):
     print('CHEGOU')
 
 def recebeDiagnostico(msg):
+     """!
+        Verfica se chegou no ponto de destino
+        Solucao mais precisa e pratica que a funcao checar
+
+        @param msg: objeto que contém dados como a posicao atual
+    """
     global chegou
     if msg.tracker_status.have_goal == False:
         chegou = True
@@ -105,6 +111,13 @@ def recebeDiagnostico(msg):
         chegou = False
 
 def compara(msg,w):
+      """!
+        Compara posicao do drone com o seu destino
+
+        Parametros:
+        @param msg: objeto que contém dados como a posicao atual
+        @param w: lista [x,y,x] com a posicao desejada
+    """
     global check 
     posx = msg.position.x
     posy = msg.position.y
@@ -153,6 +166,13 @@ def separa_lista2(lista):
         
 
 def separa_lista3(lista):
+    """!
+        Codigo principal da fase4 recebe as posições das bases. 
+        Contém a rotina para visitar as bases, identificar os cubos nelas, ler o qr code e associar o cubo com a sua base de destino
+
+        Parametros:
+            @param lista que contém as poses das bases na arena
+    """
     bases = ["A","B","C","D","E"]
     baseOrigem= bases[0]
 
